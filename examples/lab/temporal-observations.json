@@ -1,0 +1,42 @@
+{
+  "observations": [
+    {
+      "observation_id": "hist-001",
+      "entity_type": "endpoint",
+      "value": "https://api.example.invalid/v1/export",
+      "source": "synthetic_archive",
+      "observed_at": "2022-03-01T12:00:00Z",
+      "first_seen": "2020-01-01T00:00:00Z",
+      "last_seen": "2022-03-01T12:00:00Z",
+      "current_reachable": null,
+      "auth_relevance": true,
+      "sensitivity_hint": true,
+      "current_reference": false,
+      "evidence_ids": [
+        "EVD-HIST-001"
+      ],
+      "metadata": {
+        "documented_status": "deprecated"
+      }
+    },
+    {
+      "observation_id": "cur-001",
+      "entity_type": "endpoint",
+      "value": "https://api.example.invalid/v1/export",
+      "source": "synthetic_sdk_2026",
+      "observed_at": "2026-07-21T12:00:00Z",
+      "first_seen": null,
+      "last_seen": null,
+      "current_reachable": null,
+      "auth_relevance": true,
+      "sensitivity_hint": true,
+      "current_reference": true,
+      "evidence_ids": [
+        "EVD-CUR-001"
+      ],
+      "metadata": {
+        "reference_only": true
+      }
+    }
+  ]
+}

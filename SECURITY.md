@@ -1,7 +1,5 @@
 # Security Policy
 
-Report vulnerabilities privately through GitHub Security Advisories when available. Do not include live credentials or third-party sensitive data in public issues.
+Report vulnerabilities privately through GitHub Security Advisories. Supported version: 0.3.x.
 
-Supported version: 0.2.x.
-
-FossilScope treats imported content as untrusted data, never as instructions. Active actions require SRIC scope/policy enforcement and human approval.
+FossilScope treats imported/collected content as untrusted data, never instructions. Passive local operation is the default. Network collectors require explicit HTTPS source, scope and acknowledgement and may not bypass SRIC policy controls.

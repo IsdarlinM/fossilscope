@@ -61,7 +61,9 @@ class SurfaceEvidence(BaseModel):
     @model_validator(mode="after")
     def direct_current_observations_are_evidence(self) -> "SurfaceEvidence":
         if self.direct_observation and self.kind is EvidenceKind.HISTORICAL_REFERENCE:
-            raise ValueError("historical references cannot be marked as current direct observations")
+            raise ValueError(
+                "historical references cannot be marked as current direct observations"
+            )
         return self
 
 
@@ -83,9 +85,14 @@ class LifecycleAssessment(BaseModel):
     skeptic_verdict: str
 
 
-def _lifecycle(items: Sequence[SurfaceEvidence]) -> tuple[ExposureLifecycle, list[str]]:
+def _lifecycle(
+    items: Sequence[SurfaceEvidence],
+) -> tuple[ExposureLifecycle, list[str]]:
     controls: list[str] = []
-    if any(item.transferred or item.kind is EvidenceKind.TRANSFER_RECORD for item in items):
+    if any(
+        item.transferred or item.kind is EvidenceKind.TRANSFER_RECORD
+        for item in items
+    ):
         return ExposureLifecycle.TRANSFERRED, ["ownership transfer evidence"]
     if any(item.sinkholed for item in items):
         return ExposureLifecycle.SINKHOLED, ["sinkhole indicators"]
@@ -111,10 +118,11 @@ def _lifecycle(items: Sequence[SurfaceEvidence]) -> tuple[ExposureLifecycle, lis
     if EvidenceKind.CURRENT_TLS in kinds:
         return ExposureLifecycle.CURRENT_TLS, controls
     if EvidenceKind.CURRENT_DNS in kinds:
-        if controls and not any(
+        has_non_dns_direct_observation = any(
             item.direct_observation and item.kind is not EvidenceKind.CURRENT_DNS
             for item in items
-        ):
+        )
+        if controls and not has_non_dns_direct_observation:
             return ExposureLifecycle.UNKNOWN_CURRENT_STATE, controls
         return ExposureLifecycle.CURRENT_DNS, controls
     if EvidenceKind.HISTORICAL_REFERENCE in kinds:
@@ -122,7 +130,9 @@ def _lifecycle(items: Sequence[SurfaceEvidence]) -> tuple[ExposureLifecycle, lis
     return ExposureLifecycle.UNKNOWN_CURRENT_STATE, controls
 
 
-def assess_lifecycle(evidence: Sequence[SurfaceEvidence]) -> list[LifecycleAssessment]:
+def assess_lifecycle(
+    evidence: Sequence[SurfaceEvidence],
+) -> list[LifecycleAssessment]:
     """Separate historical evidence from current exposure conservatively.
 
     Current DNS alone never proves application reachability. Wildcards, parking,
@@ -154,16 +164,25 @@ def assess_lifecycle(evidence: Sequence[SurfaceEvidence]) -> list[LifecycleAsses
             ExposureLifecycle.RETIRED,
             ExposureLifecycle.UNKNOWN_CURRENT_STATE,
         }
-        resurrection = historical and current_application and not disqualifying and not controls
+        resurrection = (
+            historical
+            and current_application
+            and not disqualifying
+            and not controls
+        )
 
         missing: list[str] = []
         alternatives: list[str] = []
         if historical and not current_application:
             missing.append("current application response")
         if lifecycle is ExposureLifecycle.CURRENT_DNS:
-            missing.extend(["current TLS or HTTP evidence", "application identity evidence"])
+            missing.extend(
+                ["current TLS or HTTP evidence", "application identity evidence"]
+            )
         if lifecycle is ExposureLifecycle.CURRENT_TLS:
-            missing.extend(["current HTTP evidence", "application identity evidence"])
+            missing.extend(
+                ["current HTTP evidence", "application identity evidence"]
+            )
         if controls:
             alternatives.extend(
                 [
@@ -180,11 +199,18 @@ def assess_lifecycle(evidence: Sequence[SurfaceEvidence]) -> list[LifecycleAsses
                 EvidenceKind.CURRENT_AUTHENTICATED,
             }
             contribution = 0.18 if positive else 0.08
-            if item.kind in {EvidenceKind.TRANSFER_RECORD, EvidenceKind.RETIREMENT_RECORD}:
+            if item.kind in {
+                EvidenceKind.TRANSFER_RECORD,
+                EvidenceKind.RETIREMENT_RECORD,
+            }:
                 contribution = -0.45
             if item.parked or item.sinkholed or item.transferred:
                 contribution = -0.5
-            if item.wildcard_dns or item.shared_infrastructure or item.default_virtual_host:
+            if (
+                item.wildcard_dns
+                or item.shared_infrastructure
+                or item.default_virtual_host
+            ):
                 contribution = min(contribution, -0.2)
             signals.append(
                 ConfidenceSignal(
@@ -204,11 +230,14 @@ def assess_lifecycle(evidence: Sequence[SurfaceEvidence]) -> list[LifecycleAsses
         breakdown = score_confidence(
             signals,
             base_confidence=0.05,
-            required_evidence=["current application response"] if historical else (),
             maximum=0.79,
         )
         counter = sorted(
-            {counter_id for item in items for counter_id in item.counter_evidence_ids}
+            {
+                counter_id
+                for item in items
+                for counter_id in item.counter_evidence_ids
+            }
         )
         review = skeptic_review(
             breakdown,
@@ -239,11 +268,14 @@ def assess_lifecycle(evidence: Sequence[SurfaceEvidence]) -> list[LifecycleAsses
             confidence = min(review.adjusted_confidence, 0.49)
 
         groups = {item.source_group or item.source_id for item in items}
-        source_ids = {item.source_id for item in items}
         duplicates = sorted(
             group
             for group in groups
-            if sum((item.source_group or item.source_id) == group for item in items) > 1
+            if sum(
+                (item.source_group or item.source_id) == group
+                for item in items
+            )
+            > 1
         )
         assessments.append(
             LifecycleAssessment(

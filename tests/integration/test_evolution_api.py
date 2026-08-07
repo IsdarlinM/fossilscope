@@ -1,8 +1,13 @@
 import hashlib
+from pathlib import Path
 
 from fastapi.testclient import TestClient
 
 from fossilscope.api_vnext import create_app
+
+
+def client(tmp_path: Path) -> TestClient:
+    return TestClient(create_app(tmp_path))
 
 
 def observation(
@@ -29,28 +34,16 @@ def observation(
     }
 
 
-def test_evolution_api_reports_changes_without_current_exposure_claim() -> None:
-    client = TestClient(create_app())
-    response = client.post(
+def test_evolution_api_reports_changes_without_current_exposure_claim(tmp_path: Path) -> None:
+    response = client(tmp_path).post(
         "/api/v1/analysis/evolution/diff",
         json={
             "observations": [
-                observation(
-                    "old",
-                    "1.0.0",
-                    "2025-01-01T00:00:00Z",
-                    endpoints=["/legacy", "/stable"],
-                ),
-                observation(
-                    "new",
-                    "2.0.0",
-                    "2025-02-01T00:00:00Z",
-                    endpoints=["/stable", "/v2"],
-                ),
+                observation("old", "1.0.0", "2025-01-01T00:00:00Z", endpoints=["/legacy", "/stable"]),
+                observation("new", "2.0.0", "2025-02-01T00:00:00Z", endpoints=["/stable", "/v2"]),
             ]
         },
     )
-
     assert response.status_code == 200
     payload = response.json()
     assert payload["deltas"][0]["removed_endpoints"] == ["/legacy"]
@@ -59,18 +52,12 @@ def test_evolution_api_reports_changes_without_current_exposure_claim() -> None:
     assert payload["validated_findings_created"] == 0
 
 
-def test_stale_reference_api_never_sends_requests() -> None:
-    client = TestClient(create_app())
-    response = client.post(
+def test_stale_reference_api_never_sends_requests(tmp_path: Path) -> None:
+    response = client(tmp_path).post(
         "/api/v1/analysis/evolution/stale-references",
         json={
             "observations": [
-                observation(
-                    "old",
-                    "1.0.0",
-                    "2025-01-01T00:00:00Z",
-                    endpoints=["https://legacy.example/api"],
-                ),
+                observation("old", "1.0.0", "2025-01-01T00:00:00Z", endpoints=["https://legacy.example/api"]),
                 observation("new", "2.0.0", "2025-02-01T00:00:00Z"),
                 observation(
                     "current-docs",
@@ -82,9 +69,9 @@ def test_stale_reference_api_never_sends_requests() -> None:
             ]
         },
     )
-
     assert response.status_code == 200
     payload = response.json()
     assert payload["candidates"][0]["status"] == "HYPOTHESIS"
     assert payload["current_reachability_proved"] is False
     assert payload["requests_sent"] == 0
+    assert payload["validated_findings_created"] == 0

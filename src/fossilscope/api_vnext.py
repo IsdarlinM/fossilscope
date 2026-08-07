@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from pathlib import Path
+
 from fastapi import APIRouter, FastAPI
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
@@ -75,7 +77,7 @@ async def reobservation_retry(request: ReobservationRetryRequest) -> dict[str, o
     }
 
 
-def create_app() -> FastAPI:
-    app = create_base_app()
+def create_app(workspace: Path) -> FastAPI:
+    app = create_base_app(workspace)
     app.include_router(router)
     return app

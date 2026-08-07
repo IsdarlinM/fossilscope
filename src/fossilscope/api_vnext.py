@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from fastapi import APIRouter, FastAPI
+from fastapi import APIRouter, FastAPI, HTTPException
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from .api import create_app as create_base_app
@@ -85,7 +85,10 @@ async def reobservation_retry(request: ReobservationRetryRequest) -> dict[str, o
 
 @router.post("/evolution/diff")
 async def evolution_diff(request: EvolutionRequest) -> dict[str, object]:
-    deltas = diff_artifact_versions(request.observations)
+    try:
+        deltas = diff_artifact_versions(request.observations)
+    except ValueError as exc:
+        raise HTTPException(422, str(exc)) from exc
     return {
         "deltas": [item.model_dump(mode="json") for item in deltas],
         "current_exposure_proved": False,
@@ -95,7 +98,10 @@ async def evolution_diff(request: EvolutionRequest) -> dict[str, object]:
 
 @router.post("/evolution/stale-references")
 async def evolution_stale_references(request: EvolutionRequest) -> dict[str, object]:
-    candidates = find_stale_references(request.observations)
+    try:
+        candidates = find_stale_references(request.observations)
+    except ValueError as exc:
+        raise HTTPException(422, str(exc)) from exc
     return {
         "candidates": [item.model_dump(mode="json") for item in candidates],
         "current_reachability_proved": False,

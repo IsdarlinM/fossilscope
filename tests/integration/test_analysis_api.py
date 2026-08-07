@@ -1,13 +1,17 @@
 from datetime import datetime
+from pathlib import Path
 
 from fastapi.testclient import TestClient
 
 from fossilscope.api_vnext import create_app
 
 
-def test_lifecycle_api_preserves_historical_current_separation() -> None:
-    client = TestClient(create_app())
-    response = client.post(
+def client(tmp_path: Path) -> TestClient:
+    return TestClient(create_app(tmp_path))
+
+
+def test_lifecycle_api_preserves_historical_current_separation(tmp_path: Path) -> None:
+    response = client(tmp_path).post(
         "/api/v1/analysis/lifecycle",
         json={
             "evidence": [
@@ -27,9 +31,8 @@ def test_lifecycle_api_preserves_historical_current_separation() -> None:
     assert payload["validated_findings_created"] == 0
 
 
-def test_reobservation_api_never_executes_requests() -> None:
-    client = TestClient(create_app())
-    response = client.post(
+def test_reobservation_api_never_executes_requests(tmp_path: Path) -> None:
+    response = client(tmp_path).post(
         "/api/v1/analysis/reobservation/plan",
         json={
             "requests": [
@@ -50,9 +53,8 @@ def test_reobservation_api_never_executes_requests() -> None:
     assert payload["decisions"][0]["executable"] is True
 
 
-def test_active_reobservation_without_approval_is_blocked_not_executed() -> None:
-    client = TestClient(create_app())
-    response = client.post(
+def test_active_reobservation_without_approval_is_blocked_not_executed(tmp_path: Path) -> None:
+    response = client(tmp_path).post(
         "/api/v1/analysis/reobservation/plan",
         json={
             "requests": [
@@ -77,9 +79,8 @@ def test_active_reobservation_without_approval_is_blocked_not_executed() -> None
     assert "human approval" in " ".join(payload["decisions"][0]["blockers"])
 
 
-def test_retry_api_rejects_invalid_delay_bounds_without_500() -> None:
-    client = TestClient(create_app())
-    response = client.post(
+def test_retry_api_rejects_invalid_delay_bounds_without_500(tmp_path: Path) -> None:
+    response = client(tmp_path).post(
         "/api/v1/analysis/reobservation/retry",
         json={
             "request": {
@@ -96,9 +97,8 @@ def test_retry_api_rejects_invalid_delay_bounds_without_500() -> None:
     assert response.status_code == 422
 
 
-def test_reobservation_api_rejects_naive_not_before_without_500() -> None:
-    client = TestClient(create_app())
-    response = client.post(
+def test_reobservation_api_rejects_naive_not_before_without_500(tmp_path: Path) -> None:
+    response = client(tmp_path).post(
         "/api/v1/analysis/reobservation/plan",
         json={
             "requests": [

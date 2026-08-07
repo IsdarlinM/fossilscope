@@ -40,7 +40,7 @@ class VersionedArtifactObservation(BaseModel):
 
     @model_validator(mode="after")
     def validate_observation(self) -> "VersionedArtifactObservation":
-        if self.observed_at.tzinfo is None:
+        if self.observed_at.tzinfo is None or self.observed_at.utcoffset() is None:
             raise ValueError("observed_at must be timezone-aware")
         if len(self.content_sha256) != 64:
             raise ValueError("content_sha256 must be a 64-character digest")
@@ -103,6 +103,11 @@ def diff_artifact_versions(
             grouped[artifact_id],
             key=lambda item: (item.observed_at, item.version_label, item.observation_id),
         )
+        kinds = {item.artifact_kind for item in values}
+        if len(kinds) > 1:
+            raise ValueError(
+                f"artifact_id {artifact_id} has inconsistent artifact_kind values"
+            )
         for before, after in zip(values, values[1:]):
             groups = {
                 before.source_group or before.source_id,
@@ -124,25 +129,15 @@ def diff_artifact_versions(
                     removed_redirect_uris=sorted(
                         set(before.redirect_uris) - set(after.redirect_uris)
                     ),
-                    added_scopes=sorted(
-                        set(after.oauth_scopes) - set(before.oauth_scopes)
-                    ),
-                    removed_scopes=sorted(
-                        set(before.oauth_scopes) - set(after.oauth_scopes)
-                    ),
-                    added_references=sorted(
-                        set(after.references) - set(before.references)
-                    ),
-                    removed_references=sorted(
-                        set(before.references) - set(after.references)
-                    ),
-                    evidence_ids=sorted(
-                        set(before.evidence_ids) | set(after.evidence_ids)
-                    ),
+                    added_scopes=sorted(set(after.oauth_scopes) - set(before.oauth_scopes)),
+                    removed_scopes=sorted(set(before.oauth_scopes) - set(after.oauth_scopes)),
+                    added_references=sorted(set(after.references) - set(before.references)),
+                    removed_references=sorted(set(before.references) - set(after.references)),
+                    evidence_ids=sorted(set(before.evidence_ids) | set(after.evidence_ids)),
                     source_independence_groups=len(groups),
                     limitations=[
                         "Version differences are observed artifact changes, not proof of current exposure.",
-                        "Removal from one artifact may reflect documentation or packaging changes rather than service retirement."
+                        "Removal from one artifact may reflect documentation or packaging changes rather than service retirement.",
                     ],
                 )
             )
@@ -153,7 +148,9 @@ def find_stale_references(
     observations: Sequence[VersionedArtifactObservation],
     deltas: Sequence[EvolutionDelta] | None = None,
 ) -> list[StaleReferenceCandidate]:
-    differences = list(deltas or diff_artifact_versions(observations))
+    differences = list(
+        diff_artifact_versions(observations) if deltas is None else deltas
+    )
     current_references: dict[str, list[VersionedArtifactObservation]] = {}
     for observation in observations:
         if not observation.historical:
@@ -198,7 +195,7 @@ def find_stale_references(
                     missing_evidence=missing,
                     limitations=[
                         "A stale reference is not proof that the target is reachable or controlled by the same organization.",
-                        "Current reobservation must pass Scope and Policy before any active check."
+                        "Current reobservation must pass Scope and Policy before any active check.",
                     ],
                 )
             )

@@ -14,6 +14,11 @@ def utcnow() -> datetime:
     return datetime.now(timezone.utc)
 
 
+def _require_aware(value: datetime, field: str) -> None:
+    if value.tzinfo is None or value.utcoffset() is None:
+        raise ValueError(f"{field} must be timezone-aware")
+
+
 class ReobservationMode(StrEnum):
     PASSIVE = "PASSIVE"
     ACTIVE_HTTPS = "ACTIVE_HTTPS"
@@ -59,6 +64,9 @@ class ReobservationRequest(BaseModel):
 
     @model_validator(mode="after")
     def active_requirements(self) -> "ReobservationRequest":
+        _require_aware(self.created_at, "created_at")
+        if self.not_before is not None:
+            _require_aware(self.not_before, "not_before")
         if self.mode is ReobservationMode.ACTIVE_HTTPS:
             parsed = urlsplit(self.target)
             if parsed.scheme.lower() != "https" or not parsed.hostname:
@@ -101,13 +109,11 @@ def evaluate_reobservation(
     now: datetime | None = None,
 ) -> ReobservationDecision:
     reference = now or utcnow()
+    _require_aware(reference, "now")
     blockers: list[str] = []
     matched: str | None = None
 
-    if request.state in {
-        ReobservationState.COMPLETED,
-        ReobservationState.CANCELLED,
-    }:
+    if request.state in {ReobservationState.COMPLETED, ReobservationState.CANCELLED}:
         blockers.append(f"request is already {request.state.value}")
     if request.attempts >= request.maximum_attempts:
         blockers.append("maximum attempts reached")
@@ -154,6 +160,7 @@ def schedule_retry(
     attempts = request.attempts + 1
     delay = min(maximum_delay_seconds, base_delay_seconds * (2 ** max(0, attempts - 1)))
     reference = now or utcnow()
+    _require_aware(reference, "now")
     state = (
         ReobservationState.FAILED
         if attempts >= request.maximum_attempts

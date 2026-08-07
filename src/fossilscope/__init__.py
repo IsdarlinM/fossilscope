@@ -1,5 +1,13 @@
 """FossilScope temporal security archaeology."""
 
+from .evolution import (
+    ArtifactKind,
+    EvolutionDelta,
+    StaleReferenceCandidate,
+    VersionedArtifactObservation,
+    diff_artifact_versions,
+    find_stale_references,
+)
 from .lifecycle import (
     EvidenceKind,
     ExposureLifecycle,
@@ -19,7 +27,9 @@ from .reobservation import (
 )
 
 __all__ = [
+    "ArtifactKind",
     "EvidenceKind",
+    "EvolutionDelta",
     "ExposureLifecycle",
     "LifecycleAssessment",
     "ReobservationDecision",
@@ -27,10 +37,14 @@ __all__ = [
     "ReobservationReason",
     "ReobservationRequest",
     "ReobservationState",
+    "StaleReferenceCandidate",
     "SurfaceEvidence",
+    "VersionedArtifactObservation",
     "assess_lifecycle",
     "deduplicate_requests",
+    "diff_artifact_versions",
     "evaluate_reobservation",
+    "find_stale_references",
     "schedule_retry",
 ]
 __version__ = "0.3.1"

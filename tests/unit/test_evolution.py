@@ -11,7 +11,6 @@ from fossilscope.evolution import (
 )
 from sric.models import ClaimStatus
 
-
 T0 = datetime(2025, 1, 1, tzinfo=timezone.utc)
 
 
@@ -26,11 +25,12 @@ def observation(
     references: list[str] | None = None,
     historical: bool = True,
     source_group: str | None = None,
+    artifact_kind: ArtifactKind = ArtifactKind.SDK,
 ) -> VersionedArtifactObservation:
     return VersionedArtifactObservation(
         observation_id=observation_id,
         artifact_id="sdk-one",
-        artifact_kind=ArtifactKind.SDK,
+        artifact_kind=artifact_kind,
         version_label=version,
         observed_at=when,
         content_sha256=hashlib.sha256(observation_id.encode()).hexdigest(),
@@ -63,9 +63,7 @@ def test_version_diff_reports_api_oauth_and_reference_changes() -> None:
         redirect_uris=["https://new.example/callback"],
         scopes=["read", "write"],
     )
-
     delta = diff_artifact_versions([after, before])[0]
-
     assert delta.added_endpoints == ["/v2/new"]
     assert delta.removed_endpoints == ["/v1/old"]
     assert delta.added_scopes == ["write"]
@@ -76,25 +74,13 @@ def test_version_diff_reports_api_oauth_and_reference_changes() -> None:
 
 def test_same_upstream_does_not_count_as_two_independent_sources() -> None:
     before = observation("old", "1.0.0", T0, source_group="provider")
-    after = observation(
-        "new",
-        "2.0.0",
-        T0 + timedelta(days=1),
-        source_group="provider",
-    )
-
+    after = observation("new", "2.0.0", T0 + timedelta(days=1), source_group="provider")
     delta = diff_artifact_versions([before, after])[0]
-
     assert delta.source_independence_groups == 1
 
 
 def test_current_artifact_reference_creates_stale_hypothesis() -> None:
-    old = observation(
-        "old",
-        "1.0.0",
-        T0,
-        endpoints=["https://legacy.example/api"],
-    )
+    old = observation("old", "1.0.0", T0, endpoints=["https://legacy.example/api"])
     new = observation("new", "2.0.0", T0 + timedelta(days=30))
     current_docs = observation(
         "docs-current",
@@ -103,9 +89,7 @@ def test_current_artifact_reference_creates_stale_hypothesis() -> None:
         references=["https://legacy.example/api"],
         historical=False,
     )
-
     candidate = find_stale_references([old, new, current_docs])[0]
-
     assert candidate.status is ClaimStatus.HYPOTHESIS
     assert candidate.still_referenced_by_observation_ids == ["docs-current"]
     assert "not proof" in candidate.limitations[0]
@@ -114,14 +98,30 @@ def test_current_artifact_reference_creates_stale_hypothesis() -> None:
 def test_removed_value_without_current_reference_remains_unknown() -> None:
     old = observation("old", "1.0.0", T0, endpoints=["/legacy"])
     new = observation("new", "2.0.0", T0 + timedelta(days=30))
-
     candidate = find_stale_references([old, new])[0]
-
     assert candidate.status is ClaimStatus.UNKNOWN
     assert candidate.missing_evidence
 
 
-def test_versioned_observation_requires_evidence_and_valid_hash() -> None:
+def test_explicit_empty_delta_set_is_respected() -> None:
+    old = observation("old", "1.0.0", T0, endpoints=["/legacy"])
+    new = observation("new", "2.0.0", T0 + timedelta(days=30))
+    assert find_stale_references([old, new], deltas=[]) == []
+
+
+def test_same_artifact_id_cannot_change_artifact_kind() -> None:
+    old = observation("old", "1.0.0", T0, artifact_kind=ArtifactKind.SDK)
+    new = observation(
+        "new",
+        "2.0.0",
+        T0 + timedelta(days=1),
+        artifact_kind=ArtifactKind.DOCUMENTATION,
+    )
+    with pytest.raises(ValueError, match="inconsistent artifact_kind"):
+        diff_artifact_versions([old, new])
+
+
+def test_versioned_observation_requires_evidence_valid_hash_and_aware_time() -> None:
     with pytest.raises(ValueError, match="require evidence_ids"):
         VersionedArtifactObservation(
             observation_id="invalid",
@@ -141,3 +141,5 @@ def test_versioned_observation_requires_evidence_and_valid_hash() -> None:
             source_id="source",
             evidence_ids=["E-1"],
         )
+    with pytest.raises(ValueError, match="timezone-aware"):
+        observation("naive", "1", datetime(2026, 1, 1))

@@ -6,6 +6,9 @@
 - Hardened `import_json()` to use the existing bounded regular-file loader, closing the path/symlink/size-check bypass in the direct JSON import path.
 - Preserved active HTTPS re-observation as a separate approval-gated workflow; the planner emits passive requests only.
 - Updated SRIC compatibility to the Sentinel Forge 0.5 release train.
+- Added standalone capability discovery with no mandatory sibling-product dependencies.
+- Reworked Linux/Windows installers to resolve SRIC 0.5 automatically instead of silently consuming adjacent repositories or older core versions.
+- Added standalone CLI/API/Web tests, recursive parser/help contracts, clean-install smokes and data-preserving Linux uninstall behavior.
 - Added regression tests for bounded import enforcement and passive re-observation prioritization.
 
 ## 0.3.1 - 2026-08-06

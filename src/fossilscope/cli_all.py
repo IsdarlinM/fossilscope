@@ -4,14 +4,10 @@ import typer
 from sric.cli_style import CLIBrand, configure_cli_context, no_color_option, run_branded_cli
 
 from . import __version__
-from . import cli as _base_cli
 from . import cli_evolution as _cli_evolution  # noqa: F401
 from . import cli_planning as _cli_planning  # noqa: F401
-from .api_all import create_app as create_complete_app
 from .cli_vnext import app
 from . import cli_capabilities as _cli_capabilities  # noqa: F401
-
-_base_cli.create_app = create_complete_app
 
 __all__ = ["BRAND", "app", "normalize_help_argv", "run"]
 

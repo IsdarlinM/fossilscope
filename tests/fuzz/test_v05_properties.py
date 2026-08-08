@@ -28,4 +28,4 @@ def test_generated_reobservation_plans_are_passive_and_bounded(
     requests = plan_reobservation(candidates, maximum_requests=maximum_requests)
     assert len(requests) <= maximum_requests
     assert all(request.mode is ReobservationMode.PASSIVE for request in requests)
-    assert all("Active HTTPS" in " ".join(request.limitations) for request in requests)
+    assert all("active HTTPS" in " ".join(request.limitations) for request in requests)

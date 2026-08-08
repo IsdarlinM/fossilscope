@@ -2,7 +2,7 @@
 
 ```text
 FossilScope
-imr :: v0.5.0
+IsdarlinM :: v0.5.2
 ```
 
 Attack Surface Archaeology + Temporal Security Graph for discovering historical capabilities without confusing historical evidence with current exposure.
@@ -32,7 +32,8 @@ The absence of another Sentinel Forge product is never a FossilScope startup err
 - passive-first re-observation prioritization and bounded retry planning;
 - organization-era-aware integration capabilities when compatible products are present;
 - SRIC 0.5.x workspace, graph, jobs/SSE, lineage, notebook/search and confidence primitives;
-- local API/Web UI, CLI, reports, offline demo and signed update primitive.
+- local API/Web UI, CLI, reports, offline demo and signed update primitive;
+- professional Rich/Typer terminal presentation with subdued green banner and `--no-color` support.
 
 ## Exposure lifecycle controls
 
@@ -59,6 +60,10 @@ fossilscope capabilities
 ```
 
 The installers resolve the compatible SRIC Core package automatically. `SRIC_CORE_SOURCE=/path/to/sric-core` is an explicit development/release-validation override only; sibling repositories are never auto-detected.
+
+## CLI presentation
+
+Interactive terminals display a compact subdued-green banner with a short attack-surface archaeology description and `IsdarlinM :: v0.5.2`. Use `fossilscope --no-color COMMAND`, `fossilscope COMMAND --no-color`, or `NO_COLOR=1` for plain terminal presentation. The banner is emitted to interactive stderr so JSON and redirected stdout remain clean. See `docs/cli-presentation.md`.
 
 ## Quickstart
 
@@ -91,7 +96,7 @@ Full repository release gate:
 python scripts/release-gate.py
 ```
 
-Machine-readable evidence is written under `build/release-evidence/`. A release requires PASS for the exact source commit; merely setting the package version to 0.5.0 is not release evidence.
+Machine-readable evidence is written under `build/release-evidence/`. A release requires PASS for the exact source commit; merely setting the package version to 0.5.2 is not release evidence.
 
 ## Uninstall
 

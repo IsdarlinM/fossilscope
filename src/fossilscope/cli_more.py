@@ -1,30 +1,92 @@
 from __future__ import annotations
+
 import json
-import sys
 from datetime import datetime
 from pathlib import Path
 from typing import Optional
+
 import typer
-from sric.workspace import Workspace
 from sric.evidence import EvidenceStore
-from sric.models import Provenance, ProvenanceType
-from sric.plugins import PluginRegistry
-from sric.scope import ScopeEngine, ScopePolicy
-from sric.updater import perform_update
 from sric.graph import TemporalGraph
 from sric.jobs import JobEngine
 from sric.lineage import EvidenceLineage
+from sric.models import Provenance, ProvenanceType
 from sric.notebook import NotebookEntry, ResearchNotebook
+from sric.plugins import PluginRegistry
+from sric.scope import ScopeEngine, ScopePolicy
+from sric.updater import perform_update
+from sric.workspace import Workspace
+
 from . import __version__
-from .api import create_app
+from .api_all import create_app as create_complete_app
+from .cli import app, root_default, wp
 from .core import FossilEngine
 from .models import Observation
-from .cli import app, root_default, wp
+
+
+def _available_workspaces(root: Path) -> list[str]:
+    """Return direct, non-symlink workspace names below ROOT."""
+
+    if not root.is_dir():
+        return []
+    return sorted(
+        entry.name
+        for entry in root.iterdir()
+        if entry.is_dir()
+        and not entry.is_symlink()
+        and (entry / "workspace.json").is_file()
+    )
+
+
+def _resolve_workspace(workspace: str, root: Path) -> Path:
+    """Resolve one named workspace without allowing path/symlink escape."""
+
+    if not workspace or workspace in {".", ".."} or any(ch in workspace for ch in "/\\\0"):
+        typer.echo(
+            "Invalid workspace name. Pass a workspace name, not a path; use --root to select its parent directory.",
+            err=True,
+        )
+        raise typer.Exit(2)
+
+    resolved_root = root.expanduser().resolve()
+    candidate = resolved_root / workspace
+    if candidate.is_symlink():
+        typer.echo("Workspace symlinks are not accepted by the CLI.", err=True)
+        raise typer.Exit(2)
+
+    resolved = candidate.resolve()
+    if resolved.parent != resolved_root:
+        typer.echo("Workspace resolved outside the selected --root; refusing to open it.", err=True)
+        raise typer.Exit(2)
+
+    try:
+        return Workspace.open(resolved).root
+    except FileNotFoundError as exc:
+        available = _available_workspaces(resolved_root)
+        suffix = (
+            " Available workspaces: " + ", ".join(available) + "."
+            if available
+            else " No valid workspaces were found under that root."
+        )
+        typer.echo(
+            f"Workspace '{workspace}' was not found under {resolved_root}.{suffix}\n"
+            f"Create it with `fossilscope init {workspace}` (or pass the same --root), "
+            "or select the correct parent directory with `--root PATH`.",
+            err=True,
+        )
+        raise typer.Exit(2) from exc
+    except (OSError, ValueError) as exc:
+        typer.echo(f"Workspace '{workspace}' could not be opened safely: {exc}", err=True)
+        raise typer.Exit(2) from exc
+
 
 @app.command("lifecycle")
-def lifecycle_command(workspace: str, root: Path = typer.Option(root_default(), "--root")) -> None:
+def lifecycle_command(
+    workspace: str, root: Path = typer.Option(root_default(), "--root")
+) -> None:
     """Show candidate fossil lifecycle without equating historical evidence to current exposure."""
-    typer.echo(json.dumps(FossilEngine(wp(workspace, root)).lifecycle(), indent=2))
+
+    typer.echo(json.dumps(FossilEngine(_resolve_workspace(workspace, root)).lifecycle(), indent=2))
 
 
 @app.command("graph-at")
@@ -34,8 +96,15 @@ def graph_at_command(
     root: Path = typer.Option(root_default(), "--root"),
 ) -> None:
     """Render the temporal graph at a supplied point in time."""
+
     when = datetime.fromisoformat(at) if at else None
-    typer.echo(json.dumps(FossilEngine(wp(workspace, root)).temporal_graph(when), indent=2, default=str))
+    typer.echo(
+        json.dumps(
+            FossilEngine(_resolve_workspace(workspace, root)).temporal_graph(when),
+            indent=2,
+            default=str,
+        )
+    )
 
 
 @app.command("api-diff")
@@ -46,16 +115,28 @@ def api_diff_command(
     root: Path = typer.Option(root_default(), "--root"),
 ) -> None:
     """Compare supplied historical/current API specifications passively."""
-    typer.echo(json.dumps(FossilEngine(wp(workspace, root)).historical_api_diff(before, after), indent=2))
+
+    typer.echo(
+        json.dumps(
+            FossilEngine(_resolve_workspace(workspace, root)).historical_api_diff(before, after),
+            indent=2,
+        )
+    )
 
 
 @app.command("confidence")
 def confidence_command(
-    workspace: str, value: str, stale_after_days: int = typer.Option(365, "--stale-after-days", min=1), root: Path = typer.Option(root_default(), "--root")
+    workspace: str,
+    value: str,
+    stale_after_days: int = typer.Option(365, "--stale-after-days", min=1),
+    root: Path = typer.Option(root_default(), "--root"),
 ) -> None:
     """Explain confidence decay for evidence that has not been re-observed."""
+
     try:
-        payload = FossilEngine(wp(workspace, root)).confidence_decay(value, stale_after_days)
+        payload = FossilEngine(_resolve_workspace(workspace, root)).confidence_decay(
+            value, stale_after_days
+        )
     except KeyError:
         typer.echo("Observation value not found", err=True)
         raise typer.Exit(2)
@@ -63,25 +144,35 @@ def confidence_command(
 
 
 @app.command("clusters")
-def clusters_command(workspace: str, root: Path = typer.Option(root_default(), "--root")) -> None:
+def clusters_command(
+    workspace: str, root: Path = typer.Option(root_default(), "--root")
+) -> None:
     """Group supplied observations by explicit lineage/acquisition/issuer hints."""
-    typer.echo(json.dumps(FossilEngine(wp(workspace, root)).clusters(), indent=2))
+
+    typer.echo(json.dumps(FossilEngine(_resolve_workspace(workspace, root)).clusters(), indent=2))
 
 
 @app.command("acquisitions")
-def acquisitions_command(workspace: str, root: Path = typer.Option(root_default(), "--root")) -> None:
+def acquisitions_command(
+    workspace: str, root: Path = typer.Option(root_default(), "--root")
+) -> None:
     """Show explicit acquisition/brand lineage relationships with evidence/confidence."""
-    typer.echo(json.dumps(FossilEngine(wp(workspace, root)).acquisition_lineage(), indent=2))
+
+    typer.echo(
+        json.dumps(FossilEngine(_resolve_workspace(workspace, root)).acquisition_lineage(), indent=2)
+    )
+
 
 @app.command()
 def report(
     workspace: str, output: Path, root: Path = typer.Option(root_default(), "--root")
 ) -> None:
-    e = FossilEngine(wp(workspace, root))
-    c = e.score()
+    engine = FossilEngine(_resolve_workspace(workspace, root))
+    candidates = engine.score()
     output.write_text(
-        "# FossilScope Report\n\n## Facts\nHistorical and current observations are separated.\n\n## Candidates\n```json\n"
-        + json.dumps([x.model_dump(mode="json") for x in c], indent=2)
+        "# FossilScope Report\n\n## Facts\nHistorical and current observations are separated.\n\n"
+        "## Candidates\n```json\n"
+        + json.dumps([item.model_dump(mode="json") for item in candidates], indent=2)
         + "\n```\n\nCandidates are hypotheses unless explicitly validated with deterministic evidence.\n",
         encoding="utf-8",
     )
@@ -89,13 +180,18 @@ def report(
 
 
 @app.command()
-def demo(workspace: str = "demo", root: Path = typer.Option(root_default(), "--root")) -> None:
+def demo(
+    workspace: str = "demo", root: Path = typer.Option(root_default(), "--root")
+) -> None:
     path = wp(workspace, root)
     if not path.exists():
         root.mkdir(parents=True, exist_ok=True)
-        Workspace.create(root, workspace)
-    e = FossilEngine(path)
-    e.add_observation(
+        path = Workspace.create(root, workspace).root
+    else:
+        path = _resolve_workspace(workspace, root)
+
+    engine = FossilEngine(path)
+    engine.add_observation(
         Observation(
             observation_id="o1",
             entity_type="api_endpoint",
@@ -107,7 +203,7 @@ def demo(workspace: str = "demo", root: Path = typer.Option(root_default(), "--r
             evidence_ids=["E1"],
         )
     )
-    e.add_observation(
+    engine.add_observation(
         Observation(
             observation_id="o2",
             entity_type="api_endpoint",
@@ -118,7 +214,7 @@ def demo(workspace: str = "demo", root: Path = typer.Option(root_default(), "--r
             evidence_ids=["E2"],
         )
     )
-    typer.echo(json.dumps([x.model_dump(mode="json") for x in e.score()], indent=2))
+    typer.echo(json.dumps([item.model_dump(mode="json") for item in engine.score()], indent=2))
 
 
 @app.command()
@@ -128,14 +224,19 @@ def web(
     port: int = 8767,
     root: Path = typer.Option(root_default(), "--root"),
 ) -> None:
+    """Run the complete local FossilScope Web UI/API for an existing workspace."""
+
     if host not in {"127.0.0.1", "localhost", "::1"}:
         typer.echo(
-            "Non-loopback binding disabled until authenticated TLS mode is configured.", err=True
+            "Non-loopback binding disabled until authenticated TLS mode is configured.",
+            err=True,
         )
         raise typer.Exit(4)
+
+    workspace_path = _resolve_workspace(workspace, root)
     import uvicorn
 
-    uvicorn.run(create_app(wp(workspace, root)), host=host, port=port)
+    uvicorn.run(create_complete_app(workspace_path), host=host, port=port)
 
 
 @app.command("evidence")
@@ -148,11 +249,11 @@ def evidence_add(
     root: Path = typer.Option(root_default(), "--root"),
 ) -> None:
     """Store a local evidence artifact in SRIC content-addressed storage."""
+
     if not file.is_file():
         typer.echo("evidence input must be a regular file", err=True)
         raise typer.Exit(2)
-    workspace_path = wp(workspace, root)
-    Workspace.open(workspace_path)
+    workspace_path = _resolve_workspace(workspace, root)
     store = EvidenceStore(workspace_path / "evidence")
     ref = store.put_bytes(
         file.read_bytes(),
@@ -171,14 +272,21 @@ def evidence_add(
 @app.command("ai")
 def ai_status() -> None:
     """Show AI mode. Cloud AI remains disabled until explicitly configured."""
+
     typer.echo(
-        json.dumps({"mode": "disabled", "provider": "disabled", "cloud_uploads": False}, indent=2)
+        json.dumps(
+            {"mode": "disabled", "provider": "disabled", "cloud_uploads": False},
+            indent=2,
+        )
     )
 
 
 @app.command("plugins")
-def plugins_list(path: Path = typer.Option(Path.home() / ".sric" / "plugins", "--path")) -> None:
+def plugins_list(
+    path: Path = typer.Option(Path.home() / ".sric" / "plugins", "--path")
+) -> None:
     """List SRIC plugin manifests without auto-executing plugin code."""
+
     for manifest in PluginRegistry(path).list():
         typer.echo(f"{manifest.name}\t{manifest.version}\t{manifest.type}")
 
@@ -191,6 +299,7 @@ def scope_check(
     deny: list[str] = typer.Option([], "--deny"),
 ) -> None:
     """Evaluate a target using SRIC Scope Engine; no request is sent."""
+
     decision = ScopeEngine(
         ScopePolicy(allow_targets=allow, deny_targets=deny, allowed_methods={method.upper()})
     ).evaluate(target, method)
@@ -208,14 +317,22 @@ def scope_check(
         raise typer.Exit(3)
 
 
-
-
 @app.command("query")
 def shared_query(
-    workspace: str, query: str, limit: int = typer.Option(50, "--limit", min=1, max=500), root: Path = typer.Option(root_default(), "--root")
+    workspace: str,
+    query: str,
+    limit: int = typer.Option(50, "--limit", min=1, max=500),
+    root: Path = typer.Option(root_default(), "--root"),
 ) -> None:
     """Search this workspace's shared SRIC graph."""
-    typer.echo(json.dumps(TemporalGraph(wp(workspace, root)).search(query, limit), indent=2, default=str))
+
+    typer.echo(
+        json.dumps(
+            TemporalGraph(_resolve_workspace(workspace, root)).search(query, limit),
+            indent=2,
+            default=str,
+        )
+    )
 
 
 @app.command("notebook")
@@ -231,7 +348,8 @@ def notebook_command(
     root: Path = typer.Option(root_default(), "--root"),
 ) -> None:
     """List/append research notes or manage saved investigation queries."""
-    notebook = ResearchNotebook(wp(workspace, root))
+
+    notebook = ResearchNotebook(_resolve_workspace(workspace, root))
     if save_query_name or query:
         if not (save_query_name and query):
             raise typer.BadParameter("--save-query-name and --query are required together")
@@ -244,18 +362,31 @@ def notebook_command(
     if entry_type or title or body:
         if not (entry_type and title and body):
             raise typer.BadParameter("--type, --title and --body are required together")
-        typer.echo(notebook.add(NotebookEntry(entry_type=entry_type, title=title, body=body, status=status)).model_dump_json(indent=2))
+        typer.echo(
+            notebook.add(
+                NotebookEntry(entry_type=entry_type, title=title, body=body, status=status)
+            ).model_dump_json(indent=2)
+        )
         return
-    typer.echo(json.dumps([x.model_dump(mode="json") for x in notebook.list()], indent=2, default=str))
+    typer.echo(
+        json.dumps(
+            [item.model_dump(mode="json") for item in notebook.list()],
+            indent=2,
+            default=str,
+        )
+    )
 
 
 @app.command("evidence-lineage")
 def evidence_lineage_command(
-    workspace: str, artifact_id: str, root: Path = typer.Option(root_default(), "--root")
+    workspace: str,
+    artifact_id: str,
+    root: Path = typer.Option(root_default(), "--root"),
 ) -> None:
     """Explain evidence lineage and the reason a derived artifact is visible."""
+
     try:
-        payload = EvidenceLineage(wp(workspace, root)).explain(artifact_id)
+        payload = EvidenceLineage(_resolve_workspace(workspace, root)).explain(artifact_id)
     except KeyError:
         typer.echo(f"Unknown lineage artifact: {artifact_id}", err=True)
         raise typer.Exit(2)
@@ -264,10 +395,14 @@ def evidence_lineage_command(
 
 @app.command("jobs")
 def jobs_command(
-    workspace: str, job_id: Optional[str] = typer.Option(None, "--id"), cancel: bool = typer.Option(False, "--cancel"), root: Path = typer.Option(root_default(), "--root")
+    workspace: str,
+    job_id: Optional[str] = typer.Option(None, "--id"),
+    cancel: bool = typer.Option(False, "--cancel"),
+    root: Path = typer.Option(root_default(), "--root"),
 ) -> None:
     """List/inspect/cancel persistent SRIC jobs for this workspace."""
-    engine = JobEngine(wp(workspace, root))
+
+    engine = JobEngine(_resolve_workspace(workspace, root))
     if job_id and cancel:
         typer.echo(engine.request_cancel(job_id).model_dump_json(indent=2))
         return
@@ -276,14 +411,21 @@ def jobs_command(
             json.dumps(
                 {
                     "job": engine.get(job_id).model_dump(mode="json"),
-                    "events": [x.model_dump(mode="json") for x in engine.events(job_id)],
+                    "events": [item.model_dump(mode="json") for item in engine.events(job_id)],
                 },
                 indent=2,
                 default=str,
             )
         )
         return
-    typer.echo(json.dumps([x.model_dump(mode="json") for x in engine.list()], indent=2, default=str))
+    typer.echo(
+        json.dumps(
+            [item.model_dump(mode="json") for item in engine.list()],
+            indent=2,
+            default=str,
+        )
+    )
+
 
 @app.command("update")
 def update(
@@ -292,6 +434,7 @@ def update(
     public_key: Optional[Path] = typer.Option(None, "--public-key"),
 ) -> None:
     """Check/install a signed wheel release. Never performs a blind git pull."""
+
     import os
 
     source = manifest or os.getenv("FOSSILSCOPE_RELEASE_MANIFEST_URL")
@@ -302,7 +445,8 @@ def update(
     )
     if not source or key is None:
         typer.echo(
-            "No trusted release channel configured. Provide --manifest and --public-key.", err=True
+            "No trusted release channel configured. Provide --manifest and --public-key.",
+            err=True,
         )
         raise typer.Exit(2)
     try:
@@ -329,4 +473,3 @@ def help_command(ctx: typer.Context, command: Optional[str] = typer.Argument(Non
         typer.echo(root.commands[command].get_help(ctx))
         return
     raise typer.Exit(2)
-

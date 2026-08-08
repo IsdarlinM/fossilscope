@@ -1,12 +1,13 @@
 from typer.main import get_command
 
+from fossilscope import __version__
 from fossilscope.cli_all import BRAND, app
 from sric.cli_style import build_banner
 
 
 def test_fossilscope_brand_identity() -> None:
     banner = build_banner(BRAND)
-    product = banner.index("FossilScope :: v0.5.2")
+    product = banner.index(f"FossilScope :: v{__version__}")
     developer = banner.index("Developer: IsdarlinM")
     description = banner.index("historical attack surface")
     assert product < developer < description

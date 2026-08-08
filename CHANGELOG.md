@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.5.3 - 2026-08-08
+- Fixed `fossilscope web WORKSPACE` raising an uncaught `FileNotFoundError` when the named workspace does not exist under the selected root.
+- Added centralized named-workspace validation for extended CLI commands with actionable missing-workspace errors and no Python traceback.
+- Rejects path-like workspace names, `../` traversal and workspace symlinks that could escape the selected `--root`.
+- Fixed the Web command to construct the complete `api_all` application, including vNext analysis routes and `/api/v1/capabilities`, instead of the older base API factory.
+- Removed stale API-factory monkey patching from `cli_all` that did not affect the `cli_more.web` command.
+- Added E2E regression coverage for successful Web startup wiring, missing workspaces, traversal, symlink escape and complete API routes.
+- Updated README/CLI documentation and runtime/package version to 0.5.3.
+
 ## 0.5.2 - 2026-08-08
 - Added a subdued green interactive CLI banner ordered as `FossilScope :: v0.5.2`, `Developer: IsdarlinM`, then the product description.
 - Added colorized Typer/Rich command help plus global `--no-color` and `NO_COLOR` support.

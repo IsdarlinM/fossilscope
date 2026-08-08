@@ -3,5 +3,5 @@ set -eu
 INSTALL_ROOT="${HOME}/.fossilscope"
 BIN="${HOME}/.local/bin/fossilscope"
 rm -f "$BIN"
-rm -rf "$INSTALL_ROOT"
-echo "Removed FossilScope. User-created workspaces outside $INSTALL_ROOT were not touched."
+rm -rf "$INSTALL_ROOT/venv"
+echo "Removed FossilScope runtime. Workspaces, configuration and evidence under $INSTALL_ROOT were preserved."

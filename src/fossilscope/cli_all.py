@@ -4,10 +4,12 @@ import sys
 
 from . import cli as _base_cli
 from . import cli_evolution as _cli_evolution  # noqa: F401
-from .api_vnext import create_app as create_vnext_app
+from . import cli_planning as _cli_planning  # noqa: F401
+from .api_all import create_app as create_complete_app
 from .cli_vnext import app
+from . import cli_capabilities as _cli_capabilities  # noqa: F401
 
-_base_cli.create_app = create_vnext_app
+_base_cli.create_app = create_complete_app
 
 __all__ = ["app", "normalize_help_argv", "run"]
 
@@ -21,6 +23,6 @@ def normalize_help_argv(argv: list[str]) -> list[str]:
 
 
 def run() -> None:
-    """Console entrypoint including every public FossilScope command and vNext Web/API."""
+    """Console entrypoint including every public FossilScope command and local Web/API."""
     sys.argv[:] = normalize_help_argv(sys.argv)
     app()

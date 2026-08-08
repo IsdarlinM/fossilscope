@@ -1,6 +1,6 @@
 from typer.main import get_command
 from typer.testing import CliRunner
-from fossilscope.cli import app
+from fossilscope.cli_all import app
 
 
 def test_all_registered_commands_have_help() -> None:

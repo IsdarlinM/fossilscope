@@ -8,6 +8,7 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 from .api import create_app as create_base_app
 from .evolution import VersionedArtifactObservation, diff_artifact_versions, find_stale_references
 from .lifecycle import SurfaceEvidence, assess_lifecycle
+from .planning import ReobservationCandidate, plan_reobservation
 from .reobservation import (
     ReobservationRequest,
     deduplicate_requests,
@@ -25,6 +26,12 @@ class ReobservationPlanRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
     requests: list[ReobservationRequest]
     deduplicate: bool = True
+
+
+class ReobservationPriorityRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    candidates: list[ReobservationCandidate]
+    maximum_requests: int = Field(default=50, ge=1, le=1000)
 
 
 class ReobservationRetryRequest(BaseModel):
@@ -55,6 +62,22 @@ async def lifecycle(request: LifecycleRequest) -> dict[str, object]:
         "assessments": [item.model_dump(mode="json") for item in assessments],
         "validated_findings_created": 0,
         "historical_evidence_proves_current_exposure": False,
+    }
+
+
+@router.post("/reobservation/prioritize")
+async def reobservation_prioritize(request: ReobservationPriorityRequest) -> dict[str, object]:
+    planned = plan_reobservation(
+        request.candidates,
+        maximum_requests=request.maximum_requests,
+    )
+    return {
+        "requests": [item.model_dump(mode="json") for item in planned],
+        "planned_request_count": len(planned),
+        "passive_only": True,
+        "executed": False,
+        "requests_sent": 0,
+        "validated_findings_created": 0,
     }
 
 

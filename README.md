@@ -2,12 +2,25 @@
 
 ```text
 FossilScope
-imr :: v0.3.1
+imr :: v0.5.0
 ```
 
 Attack Surface Archaeology + Temporal Security Graph for discovering historical capabilities without confusing historical evidence with current exposure.
 
 > **AI proposes. Evidence proves. Humans control.**
+
+## Standalone by design
+
+FossilScope is independently installable and independently useful. It uses **SRIC Core 0.5.x** internally for evidence, provenance, workspaces, policy, scope, jobs and shared research primitives, but **ReproSec, AuthTwin, TrustBoundary Mapper and Exposure DNA are not required**.
+
+Installing other Sentinel Forge products only unlocks optional cross-product capabilities. Check the current environment with:
+
+```bash
+fossilscope doctor
+fossilscope capabilities
+```
+
+The absence of another Sentinel Forge product is never a FossilScope startup error.
 
 ## Implemented
 
@@ -16,21 +29,42 @@ Attack Surface Archaeology + Temporal Security Graph for discovering historical 
 - bounded opt-in HTTPS collection with explicit scope, terms acknowledgement, DNS revalidation/pinning, no redirects, rate limits, cache and provenance;
 - time-travel graph, lifecycle states, confidence decay and separate historical/current confidence;
 - historical API/mobile archaeology, clustering and acquisition lineage;
-- shared SRIC 0.4.1 workspace, graph, jobs/SSE, lineage, notebook/search and confidence calibration;
+- passive-first re-observation prioritization and bounded retry planning;
+- organization-era-aware integration capabilities when compatible products are present;
+- SRIC 0.5.x workspace, graph, jobs/SSE, lineage, notebook/search and confidence primitives;
 - local API/Web UI, CLI, reports, offline demo and signed update primitive.
 
-## Exposure lifecycle controls in v0.3.1
+## Exposure lifecycle controls
 
-FossilScope now distinguishes `HISTORICAL_ONLY`, `CURRENT_DNS`, `CURRENT_TLS`, `CURRENT_HTTP`, `CURRENT_AUTHENTICATED`, `REDIRECTED`, `PARKED`, `SINKHOLED`, `TRANSFERRED`, `RETIRED` and `UNKNOWN_CURRENT_STATE`.
+FossilScope distinguishes `HISTORICAL_ONLY`, `CURRENT_DNS`, `CURRENT_TLS`, `CURRENT_HTTP`, `CURRENT_AUTHENTICATED`, `REDIRECTED`, `PARKED`, `SINKHOLED`, `TRANSFERRED`, `RETIRED` and `UNKNOWN_CURRENT_STATE`.
 
-Historical evidence never proves present reachability. DNS alone does not prove an application is active. Wildcard DNS, shared infrastructure, default virtual hosts, parking, sinkholes, ownership transfers and retirement records reduce or disqualify resurrection candidates. Mirrors and derived data providers sharing one upstream source count as one source group.
+Historical evidence never proves present reachability. DNS alone does not prove an application is active. Wildcard DNS, shared infrastructure, default virtual hosts, parking, sinkholes, ownership transfers and retirement records reduce or disqualify resurrection candidates. A historical asset with direct current application evidence may become a `HYPOTHESIS`; it never becomes `VALIDATED` without deterministic evidence and human-controlled validation.
 
-A historical asset with a direct current application response may become a `HYPOTHESIS`; it never becomes `VALIDATED` without deterministic evidence and human-controlled validation.
+## Standalone install
+
+Linux:
+
+```bash
+./scripts/install-linux.sh
+fossilscope doctor
+fossilscope capabilities
+```
+
+Windows:
+
+```cmd
+scripts\install-windows.cmd
+fossilscope doctor
+fossilscope capabilities
+```
+
+The installers resolve the compatible SRIC Core package automatically. `SRIC_CORE_SOURCE=/path/to/sric-core` is an explicit development/release-validation override only; sibling repositories are never auto-detected.
 
 ## Quickstart
 
 ```bash
 fossilscope doctor
+fossilscope capabilities
 fossilscope demo --workspace demo
 fossilscope timeline demo
 fossilscope fossils demo
@@ -39,14 +73,32 @@ fossilscope web demo
 
 Network collection is never hidden. `collect-url` requires HTTPS, explicit `--allow` scope and `--ack-terms`.
 
-## Local release gate
+## Web and API
+
+`fossilscope web WORKSPACE` serves the local responsive dashboard and API. The Web UI includes temporal views, fossil candidates, lifecycle information, search, evidence detail and real-time job status. It is **not an operating-system web shell**.
+
+## Validation gates
+
+Standalone conformance:
 
 ```bash
-python -m pip install -e ../sric-core
-python -m pip install -e '.[dev]'
+python -m sric.standalone_gate --root .
+```
+
+Full repository release gate:
+
+```bash
 python scripts/release-gate.py
 ```
 
-The complete report is written to `build/release-evidence/release-gate.json`; a release requires `PASS` for the exact source commit.
+Machine-readable evidence is written under `build/release-evidence/`. A release requires PASS for the exact source commit; merely setting the package version to 0.5.0 is not release evidence.
+
+## Uninstall
+
+```bash
+./scripts/uninstall-linux.sh
+```
+
+Uninstall removes the runtime and command shim while preserving workspaces, configuration and evidence under `~/.fossilscope/`.
 
 Telemetry, cloud AI and external uploads are OFF by default. Apache-2.0.

@@ -88,8 +88,7 @@ class FossilEngine:
         self.graph_store.upsert_edge(GraphEdge(edge_id=f"fossil-rel:{rel.relationship_id}", source_node_id=f"fossil:{rel.source_value}", target_node_id=f"fossil:{rel.target_value}", edge_type=rel.relationship_type, valid_from=rel.valid_from, valid_to=rel.valid_to, observed_at=rel.observed_at, confidence=rel.confidence, evidence_ids=rel.evidence_ids, discovery_method="fossilscope_relationship"))
 
     def import_json(self, path: Path) -> int:
-        raw = path.read_text(encoding="utf-8")
-        payload = __import__("json").loads(raw)
+        payload = _load_json_file(path)
         items = payload if isinstance(payload, list) else payload.get("observations", [])
         count = 0
         for x in items:
@@ -199,7 +198,6 @@ class FossilEngine:
             auth = 1.0 if any(o.auth_relevance for o in obses) else 0.0
             sensitive = 1.0 if any(o.sensitivity_hint for o in obses) else 0.0
             refs = 1.0 if any(o.current_reference for o in obses) else 0.0
-            # Historical staleness + current reachability/reference make an explainable candidate; stale-only evidence is not enough.
             score = min(
                 1.0,
                 0.24 * recency

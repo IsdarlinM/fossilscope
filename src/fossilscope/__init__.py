@@ -15,6 +15,11 @@ from .lifecycle import (
     SurfaceEvidence,
     assess_lifecycle,
 )
+from .planning import (
+    CurrentExposureState,
+    ReobservationCandidate,
+    plan_reobservation,
+)
 from .reobservation import (
     ReobservationDecision,
     ReobservationMode,
@@ -28,10 +33,12 @@ from .reobservation import (
 
 __all__ = [
     "ArtifactKind",
+    "CurrentExposureState",
     "EvidenceKind",
     "EvolutionDelta",
     "ExposureLifecycle",
     "LifecycleAssessment",
+    "ReobservationCandidate",
     "ReobservationDecision",
     "ReobservationMode",
     "ReobservationReason",
@@ -45,6 +52,7 @@ __all__ = [
     "diff_artifact_versions",
     "evaluate_reobservation",
     "find_stale_references",
+    "plan_reobservation",
     "schedule_retry",
 ]
-__version__ = "0.3.1"
+__version__ = "0.5.0"

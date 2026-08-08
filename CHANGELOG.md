@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.5.1 - 2026-08-08
+- Fixed clean installation when `sric-core` is not published on PyPI.
+- Added `requirements/first-party.txt` pinned to the exact SRIC Core 0.5.1 GitHub commit.
+- Windows and Linux installers now bootstrap first-party dependencies before resolving the product and third-party runtime dependencies.
+- Preserved `SRIC_CORE_SOURCE` as an explicit development override and kept normal users independent of adjacent repository checkouts.
+- Updated the runtime lock to SRIC Core 0.5.1 and added standalone regression coverage for the installer dependency contract.
+
 ## 0.5.0 - 2026-08-08
 - Added passive-first re-observation planning that prioritizes uncertain current state, current references, authorization relevance, source conflicts and temporal staleness without treating priority as severity.
 - Added explicit current-exposure planning states and deterministic deduplicated re-observation request IDs.

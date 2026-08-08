@@ -1,8 +1,10 @@
 # FossilScope
 
 ```text
-FossilScope
-IsdarlinM :: v0.5.2
+FossilScope :: v0.5.2
+Developer: IsdarlinM
+
+Map historical attack surface and separate history from current exposure.
 ```
 
 Attack Surface Archaeology + Temporal Security Graph for discovering historical capabilities without confusing historical evidence with current exposure.
@@ -63,7 +65,7 @@ The installers resolve the compatible SRIC Core package automatically. `SRIC_COR
 
 ## CLI presentation
 
-Interactive terminals display a compact subdued-green banner with a short attack-surface archaeology description and `IsdarlinM :: v0.5.2`. Use `fossilscope --no-color COMMAND`, `fossilscope COMMAND --no-color`, or `NO_COLOR=1` for plain terminal presentation. The banner is emitted to interactive stderr so JSON and redirected stdout remain clean. See `docs/cli-presentation.md`.
+Interactive terminals display a compact subdued-green banner ordered as `FossilScope :: v0.5.2`, `Developer: IsdarlinM`, then `Map historical attack surface and separate history from current exposure.` Use `fossilscope --no-color COMMAND`, `fossilscope COMMAND --no-color`, or `NO_COLOR=1` for plain terminal presentation. The banner is emitted to interactive stderr so JSON and redirected stdout remain clean. See `docs/cli-presentation.md`.
 
 ## Quickstart
 

@@ -4,6 +4,7 @@ import sys
 
 from . import cli as _base_cli
 from . import cli_evolution as _cli_evolution  # noqa: F401
+from . import cli_planning as _cli_planning  # noqa: F401
 from .api_vnext import create_app as create_vnext_app
 from .cli_vnext import app
 

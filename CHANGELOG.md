@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.5.2 - 2026-08-08
+- Added a subdued green interactive CLI banner with product description and `IsdarlinM :: v0.5.2` signature.
+- Added colorized Typer/Rich command help plus global `--no-color` and `NO_COLOR` support.
+- Kept banner output on interactive stderr so JSON, graph output and automation stdout remain clean.
+- Added CLI branding regression tests and documentation.
+- Updated the SRIC Core runtime floor, lock and first-party source pin to 0.5.2.
+- Corrected the passive-planning property test to match the production `active HTTPS` limitation text.
+
 ## 0.5.1 - 2026-08-08
 - Fixed clean installation when `sric-core` is not published on PyPI.
 - Added `requirements/first-party.txt` pinned to the exact SRIC Core 0.5.1 GitHub commit.

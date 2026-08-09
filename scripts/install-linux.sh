@@ -64,15 +64,22 @@ case ":${PATH:-}:" in
   *)
     PROFILE="${HOME}/.profile"
     PATH_LINE='export PATH="$HOME/.local/bin:$PATH"'
+    # Strip shell-escaping characters before persisting the literal shell statement.
+    PATH_LINE=$(printf '%s' "$PATH_LINE" | sed 's/\\"/"/g')
     touch "$PROFILE"
     grep -F "$PATH_LINE" "$PROFILE" >/dev/null 2>&1 || printf '\n# Sentinel Forge tools\n%s\n' "$PATH_LINE" >> "$PROFILE"
     ;;
 esac
 
-"$VENV/bin/$CMD" doctor --json
-"$VENV/bin/$CMD" capabilities
-"$VENV/bin/$CMD" --help >/dev/null
-"$VENV/bin/$CMD" -h >/dev/null
-"$VENV/bin/$CMD" help >/dev/null
+# Installer validation is intentionally quiet: CLI banners belong to interactive use,
+# not to each internal smoke check. Surface captured diagnostics only on failure.
+CHECK_ERR="$INSTALL_ROOT/install-check.stderr"
+: > "$CHECK_ERR"
+if ! SENTINEL_BANNER=off "$VENV/bin/$CMD" doctor --json >/dev/null 2>"$CHECK_ERR"; then cat "$CHECK_ERR" >&2; echo "FossilScope doctor check failed." >&2; exit 3; fi
+if ! SENTINEL_BANNER=off "$VENV/bin/$CMD" capabilities >/dev/null 2>"$CHECK_ERR"; then cat "$CHECK_ERR" >&2; echo "FossilScope capability check failed." >&2; exit 3; fi
+SENTINEL_BANNER=off "$VENV/bin/$CMD" --help >/dev/null 2>&1
+SENTINEL_BANNER=off "$VENV/bin/$CMD" -h >/dev/null 2>&1
+SENTINEL_BANNER=off "$VENV/bin/$CMD" help >/dev/null 2>&1
+rm -f "$CHECK_ERR"
 printf '%s installed/repaired successfully in standalone mode.\n' "$PROJECT"
 printf 'Command: %s\n' "$CMD"

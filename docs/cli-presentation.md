@@ -1,9 +1,11 @@
 # CLI presentation
 
-FossilScope 0.5.7 uses the shared Sentinel Forge CLI presentation contract from SRIC Core.
+FossilScope 0.5.8 uses the shared Sentinel Forge CLI presentation contract from SRIC Core.
 
-Interactive console sessions show a subdued green ASCII banner ordered as `FossilScope :: v0.5.7`, `Developer: IsdarlinM`, then `Map historical attack surface and separate history from current exposure.` The banner is written to interactive stderr, keeping stdout suitable for JSON, graph exports, redirection, and automation.
+Interactive console sessions show a subdued green ASCII banner ordered as `FossilScope :: v0.5.8`, `Developer: IsdarlinM`, then `Map historical attack surface and separate history from current exposure.` The banner is written to interactive stderr, keeping stdout suitable for JSON, graph exports, redirection, and automation.
 
 Use `fossilscope --no-color COMMAND` to disable ANSI/Rich colors. The installed console entrypoint also normalizes `fossilscope COMMAND --no-color`. The standard `NO_COLOR` environment variable is honored.
+
+The public help contract includes `fossilscope --help`, `fossilscope -h`, `fossilscope help`, `fossilscope COMMAND --help`, `fossilscope COMMAND -h`, and `fossilscope COMMAND help`. The release regression suite walks every public command and compares its ordered CLI parameters with the Web Feature Workbench schema.
 
 Typer/Rich command and help presentation is colorized by default. `--no-color` changes presentation only; it does not alter temporal evidence, lifecycle assessments, re-observation planning, workspace resolution, update verification, Web Feature Workbench/Command Console behavior, or API responses.

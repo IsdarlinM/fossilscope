@@ -2,8 +2,8 @@
   "schema_version": 1,
   "product": "fossilscope",
   "repository": "IsdarlinM/fossilscope",
-  "version": "0.5.6",
-  "commit": "06b47cd24c4d079ac821c97ede5af0ef7eb971db",
-  "rollback_version": "0.5.5",
-  "rollback_commit": "94f278fb37ccfa953ba48a7c7fc8dfc986950458"
+  "version": "0.5.7",
+  "commit": "21cbe1ed07ad3fdf6cb07983f6afd0ad32a77b0a",
+  "rollback_version": "0.5.6",
+  "rollback_commit": "06b47cd24c4d079ac821c97ede5af0ef7eb971db"
 }

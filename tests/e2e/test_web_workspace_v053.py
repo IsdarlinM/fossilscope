@@ -4,6 +4,7 @@ from pathlib import Path
 
 import pytest
 import uvicorn
+from fastapi.testclient import TestClient
 from typer.testing import CliRunner
 
 import fossilscope.cli_more as cli_more
@@ -89,3 +90,21 @@ def test_complete_web_factory_exposes_vnext_and_capability_routes(tmp_path: Path
 
     assert "/api/v1/analysis/lifecycle" in paths
     assert "/api/v1/capabilities" in paths
+
+
+def test_console_assets_are_allowed_by_csp_and_catalog_is_live(tmp_path: Path) -> None:
+    workspace = Workspace.create(tmp_path, "imr")
+    client = TestClient(create_complete_app(workspace.root), raise_server_exceptions=False)
+
+    page = client.get("/console")
+    styles = client.get("/console/styles.css")
+    catalog = client.get("/api/v1/console/catalog")
+
+    assert page.status_code == 200
+    assert styles.status_code == 200
+    assert styles.headers["content-type"].startswith("text/css")
+    assert "style-src 'self' 'unsafe-inline'" in page.headers["content-security-policy"]
+    assert catalog.status_code == 200, catalog.text
+    payload = catalog.json()
+    assert payload["product"] == "fossilscope"
+    assert any(command["path"] == "doctor" for command in payload["commands"])

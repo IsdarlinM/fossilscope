@@ -1,11 +1,11 @@
-# Web/CLI capability parity
+# Web/CLI feature parity
 
-FossilScope 0.5.5 mounts the shared SRIC 0.5.4 Web Command Console at `/console` while preserving the complete existing temporal dashboard and named-workspace validation behavior.
+FossilScope 0.5.7 mounts the shared SRIC Web Feature Workbench at `/workbench` and retains `/console` as the advanced argv-oriented surface.
 
-The console discovers `fossilscope.cli_all` at runtime and exposes the same public command tree, including nested commands, through a responsive same-origin UI and `/api/v1/console/*` API. A standalone regression test requires the Web catalog and CLI catalog to be exactly equal.
+The native temporal dashboard remains the quick evidence view and now exposes visible **All Features** and **Advanced Console** navigation. This closes the previous discoverability gap where the root page exposed only Temporal Security Graph, Fossil Candidates and Lifecycle.
 
-This is not an operating-system shell. Execution uses the fixed `sric.web_console_runner`, `shell=False`, disabled stdin and an argv array. The browser cannot choose an executable. Mutating commands require explicit approval; destructive command names require an approval phrase. FossilScope scope, terms acknowledgement, passive-first defaults and active collection safety gates remain authoritative.
+The Workbench derives its catalog from `fossilscope.cli_all`. Every public command and every ordered CLI parameter is represented as a structured responsive Web control. `/api/v1/workbench/coverage` reports exact parity.
 
-Arguments and retained output are redacted, output is rendered as untrusted text, console jobs are cancellable and output/status is streamed with SSE. Commands requiring interactive stdin must use their explicit CLI flags in the Web argument field.
+Execution uses the fixed `sric.web_console_runner` with `shell=False`, disabled stdin, CSRF protection, secret redaction, bounded/cancellable jobs and SSE output. FossilScope passive-first behavior, scope, terms acknowledgement and active collection approval gates remain authoritative.
 
-See the shared SRIC document `docs/web/cli-parity.md` for the complete execution and security contract.
+The release tests invoke help for every public command, verify all options/required arguments, compare the complete ordered CLI parameter tree with the Workbench schema, verify dashboard navigation and smoke-test the native temporal APIs. Active/destructive actions are gate-tested rather than executed merely for coverage.

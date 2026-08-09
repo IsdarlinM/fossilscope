@@ -1,7 +1,7 @@
 # FossilScope
 
 ```text
-FossilScope :: v0.5.6
+FossilScope :: v0.5.7
 Developer: IsdarlinM
 
 Map historical attack surface and separate history from current exposure.
@@ -15,14 +15,10 @@ Attack Surface Archaeology + Temporal Security Graph for discovering historical 
 
 FossilScope is independently installable and independently useful. It uses **SRIC Core 0.5.x** internally for evidence, provenance, workspaces, policy, scope, jobs and shared research primitives, but **ReproSec, AuthTwin, TrustBoundary Mapper and Exposure DNA are not required**.
 
-Installing other Sentinel Forge products only unlocks optional cross-product capabilities. Check the current environment with:
-
 ```bash
 fossilscope doctor
 fossilscope capabilities
 ```
-
-The absence of another Sentinel Forge product is never a FossilScope startup error.
 
 ## Implemented
 
@@ -38,7 +34,8 @@ The absence of another Sentinel Forge product is never a FossilScope startup err
 - complete Web/API factory with vNext analysis and capability routes;
 - validated named-workspace resolution for Web/extended CLI commands, with traversal/symlink escape rejection and actionable errors;
 - zero-config official update flow with safe same-version `update --force` reinstall support;
-- Web Command Console with exact public CLI command-tree parity and real-time jobs;
+- **full Web Feature Workbench** with every public FossilScope CLI command and argument represented as structured responsive controls;
+- advanced Web Command Console with exact public CLI command-tree parity and real-time jobs;
 - professional Rich/Typer terminal presentation with subdued green banner and `--no-color` support.
 
 ## Exposure lifecycle controls
@@ -69,7 +66,7 @@ The installers resolve the compatible SRIC Core package automatically. `SRIC_COR
 
 ## CLI presentation
 
-Interactive terminals display a compact subdued-green banner ordered as `FossilScope :: v0.5.6`, `Developer: IsdarlinM`, then `Map historical attack surface and separate history from current exposure.` Use `fossilscope --no-color COMMAND`, `fossilscope COMMAND --no-color`, or `NO_COLOR=1` for plain terminal presentation. The banner is emitted to interactive stderr so JSON and redirected stdout remain clean. See `docs/cli-presentation.md`.
+Interactive terminals display a compact subdued-green banner ordered as `FossilScope :: v0.5.7`, `Developer: IsdarlinM`, then `Map historical attack surface and separate history from current exposure.` Use `fossilscope --no-color COMMAND`, `fossilscope COMMAND --no-color`, or `NO_COLOR=1` for plain terminal presentation.
 
 ## Quickstart
 
@@ -94,28 +91,20 @@ Network collection is never hidden. `collect-url` requires HTTPS, explicit `--al
 
 ## Web and API
 
-`fossilscope web WORKSPACE` serves the complete local responsive dashboard and API for an **existing named workspace**. The default workspace root is `~/.fossilscope/workspaces`.
+`fossilscope web WORKSPACE` serves the local dashboard and API for an **existing named workspace**. The default root is `~/.fossilscope/workspaces`.
 
-```bash
-fossilscope workspace list
-fossilscope web imr
-```
+The dashboard root is intentionally a quick temporal view, but it now exposes visible navigation to:
 
-If the workspace lives under a different parent directory, select that parent explicitly:
+- **All Features** → `/workbench`: every public `fossilscope.cli_all` command and every CLI argument/option as structured responsive controls;
+- **Advanced Console** → `/console`: expert argv-oriented command execution.
 
-```bash
-fossilscope web imr --root /path/to/workspaces
-```
+This directly avoids the previous situation where the root dashboard displayed only Temporal Security Graph, Fossil Candidates and Lifecycle while the rest of the product was hidden from normal Web navigation.
 
-Workspace names are not filesystem paths. `../` traversal and workspace symlinks are rejected rather than allowing a named workspace to escape the selected root. Missing or invalid workspaces produce an actionable CLI error and do not emit a Python traceback.
+The Workbench is derived from the installed CLI tree; `/api/v1/workbench/coverage` must report exact command/parameter parity. It uses the fixed SRIC runner with `shell=False`, disabled stdin, CSRF protection, secret redaction, bounded/cancellable jobs and SSE output. FossilScope remains passive-first; scope, terms acknowledgement, Policy and approval gates remain authoritative.
 
-The existing temporal Web UI remains available with fossil candidates, lifecycle information, search, evidence detail and real-time job status. `/console` adds the Web Command Console, whose catalog is generated from `fossilscope.cli_all`; a standalone test requires the Web and CLI command-path sets to be exactly equal.
-
-The console is **not an operating-system web shell**. It invokes only the fixed SRIC runner with `shell=False`, disabled stdin and a structured argv array. Mutating commands require explicit approval, while FossilScope passive-first, scope and terms-acknowledgement gates remain authoritative. See `docs/web/cli-parity.md`.
+Workspace names are not filesystem paths. `../` traversal and workspace symlinks are rejected. Missing or invalid workspaces produce actionable errors without Python tracebacks.
 
 ## Updates
-
-The official update path is zero-config:
 
 ```bash
 fossilscope update --check
@@ -123,27 +112,18 @@ fossilscope update
 fossilscope update --force
 ```
 
-Normal users do **not** provide a manifest or public key. SRIC resolves only the fixed official `IsdarlinM/fossilscope` channel, requires the selected immutable release commit to be reported by GitHub as signature-verified, validates the exact source snapshot and package metadata, backs up state, installs without a shell, and verifies the installed distribution version.
-
-`--force` reinstalls the official release even when that exact version is already installed. It may install a newer official release but never downgrades; `--check` and `--force` cannot be combined. Normal upgrades require rollback metadata; same-version forced reinstalls use the verified target snapshot as the recovery package.
-
-`--manifest` and `--public-key` remain available together only as an advanced custom/private-channel override. Custom channels retain Ed25519 manifest and SHA-256 wheel verification. No blind `git pull` fallback is used. See `docs/release/update.md`.
+The official path is zero-config. Normal users provide no manifest or public key. `--force` can reinstall the same official version or move forward, never downgrade. Custom `--manifest` + `--public-key` remains an advanced signed-channel override.
 
 ## Validation gates
 
-Standalone conformance:
-
 ```bash
 python -m sric.standalone_gate --root .
-```
-
-Full repository release gate:
-
-```bash
 python scripts/release-gate.py
 ```
 
-Machine-readable evidence is written under `build/release-evidence/`. A release requires PASS for the exact source commit; merely setting the package version is not release evidence.
+The 0.5.7 interface suite walks every public FossilScope command with `--help`, verifies every option and required argument, compares the complete ordered CLI parameter tree with the Workbench catalog, verifies the dashboard links to all features, and smoke-tests the native timeline/candidates/lifecycle/graph/clusters/jobs/notebook APIs. Destructive or active operations are gate-tested rather than executed merely for coverage.
+
+Machine-readable evidence is written under `build/release-evidence/`. A release requires PASS for the exact source commit.
 
 ## Uninstall
 
@@ -151,6 +131,6 @@ Machine-readable evidence is written under `build/release-evidence/`. A release 
 ./scripts/uninstall-linux.sh
 ```
 
-Uninstall removes the runtime and command shim while preserving workspaces, configuration and evidence under `~/.fossilscope/`.
+Uninstall removes runtime and command shim while preserving workspaces, configuration and evidence under `~/.fossilscope/`.
 
 Telemetry, cloud AI and external uploads are OFF by default. Apache-2.0.

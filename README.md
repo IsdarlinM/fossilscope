@@ -1,7 +1,7 @@
 # FossilScope
 
 ```text
-FossilScope :: v0.5.8
+FossilScope :: v0.5.9
 Developer: IsdarlinM
 
 Map historical attack surface and separate history from current exposure.
@@ -65,13 +65,11 @@ fossilscope doctor --json
 fossilscope capabilities
 ```
 
-The installers resolve the compatible SRIC Core package automatically. `SRIC_CORE_SOURCE=/path/to/sric-core` is an explicit development/release-validation override only; sibling repositories are never auto-detected.
+The normal installer pins SRIC Core to an immutable GitHub commit and resolves that explicit first-party source **in the same pip transaction as FossilScope**. This is important because `sric-core` is intentionally not discovered from PyPI; a separate product-only `--force-reinstall` would make pip search the public index and can produce `ResolutionImpossible` even after SRIC was already bootstrapped. `SRIC_CORE_SOURCE=/path/to/sric-core` remains an explicit development/release-validation override only.
 
-The installers are repair-capable. Existing virtual environments are not blindly trusted: the pinned signed SRIC runtime and FossilScope are force-reinstalled, `pip check` must pass, both `sric.web_console` and `sric.web_workbench` must import, the SRIC version range is verified, and doctor/capability/help smokes run before installation is reported successful. Workspaces/configuration/evidence under `~/.fossilscope/` are preserved.
+The installers are repair-capable and preserve workspaces/configuration/evidence. They bootstrap `pip`, `setuptools` and `wheel`, force-reinstall the constrained product + explicit SRIC source, run `pip check`, import `sric.web_console` and `sric.web_workbench`, verify the supported SRIC version range, and run doctor/capability plus `--help`, `-h` and `help` smokes before reporting success. Linux writes a valid `~/.profile` PATH line without literal quotes; Windows accepts any Python 3 installation that actually satisfies `>=3.11`.
 
-### Recovering a stale SRIC installation
-
-If a previously installed FossilScope fails before command dispatch with a missing shared SRIC module, update the checkout and rerun the repair installer rather than deleting the workspace:
+### Recovering an existing installation
 
 ```bash
 cd ~/fossilscope
@@ -83,9 +81,11 @@ fossilscope doctor --json
 fossilscope web imr
 ```
 
+Do not delete `~/.fossilscope/` to repair this class of runtime problem; workspaces and evidence are intentionally preserved.
+
 ## CLI presentation
 
-Interactive terminals display a compact subdued-green banner ordered as `FossilScope :: v0.5.8`, `Developer: IsdarlinM`, then `Map historical attack surface and separate history from current exposure.` Use `fossilscope --no-color COMMAND`, `fossilscope COMMAND --no-color`, or `NO_COLOR=1` for plain terminal presentation.
+Interactive terminals display a compact subdued-green banner ordered as `FossilScope :: v0.5.9`, `Developer: IsdarlinM`, then `Map historical attack surface and separate history from current exposure.` Use `fossilscope --no-color COMMAND`, `fossilscope COMMAND --no-color`, or `NO_COLOR=1` for plain terminal presentation.
 
 The help contract covers `fossilscope --help`, `fossilscope -h`, `fossilscope help`, `fossilscope COMMAND --help`, `fossilscope COMMAND -h` and `fossilscope COMMAND help`.
 
@@ -146,7 +146,7 @@ python -m sric.standalone_gate --root .
 python scripts/release-gate.py
 ```
 
-The 0.5.8 regression suite reproduces the exact reported stale-SRIC/missing-`sric.web_workbench` failure shape, validates the signed 0.5.5→0.5.6→0.5.7 transition chain and same-version repair, verifies degraded Web behavior, walks every public FossilScope command with all supported help forms, and compares every ordered CLI argument/option with the Workbench schema. Existing unit/integration/E2E/security suites continue to cover timeline, fossils, lifecycle, graph/clusters, passive adapters, bounded HTTPS collection, scope/terms gates, re-observation, workspace safety, import hardening and native Web/API routes. Active/destructive operations are gate-tested rather than executed merely for coverage.
+The 0.5.9 installer regressions cover the exact unpublished-first-party resolver topology, immutable SRIC pin, runtime lock, Linux PATH quoting, Windows Python selection and dependency/import/help smokes. The 0.5.8 stale-SRIC regression suite remains in place, and existing unit/integration/E2E/security suites continue to cover timeline, fossils, lifecycle, graph/clusters, passive adapters, bounded HTTPS collection, scope/terms gates, re-observation, workspace safety, import hardening and native Web/API routes.
 
 Machine-readable evidence is written under `build/release-evidence/`. A release requires PASS for the exact source commit.
 

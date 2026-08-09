@@ -1,7 +1,7 @@
 # FossilScope
 
 ```text
-FossilScope :: v0.5.4
+FossilScope :: v0.5.5
 Developer: IsdarlinM
 
 Map historical attack surface and separate history from current exposure.
@@ -38,6 +38,7 @@ The absence of another Sentinel Forge product is never a FossilScope startup err
 - complete Web/API factory with vNext analysis and capability routes;
 - validated named-workspace resolution for Web/extended CLI commands, with traversal/symlink escape rejection and actionable errors;
 - signed update flow with safe same-version `update --force` reinstall support;
+- Web Command Console with exact public CLI command-tree parity and real-time jobs;
 - professional Rich/Typer terminal presentation with subdued green banner and `--no-color` support.
 
 ## Exposure lifecycle controls
@@ -68,7 +69,7 @@ The installers resolve the compatible SRIC Core package automatically. `SRIC_COR
 
 ## CLI presentation
 
-Interactive terminals display a compact subdued-green banner ordered as `FossilScope :: v0.5.4`, `Developer: IsdarlinM`, then `Map historical attack surface and separate history from current exposure.` Use `fossilscope --no-color COMMAND`, `fossilscope COMMAND --no-color`, or `NO_COLOR=1` for plain terminal presentation. The banner is emitted to interactive stderr so JSON and redirected stdout remain clean. See `docs/cli-presentation.md`.
+Interactive terminals display a compact subdued-green banner ordered as `FossilScope :: v0.5.5`, `Developer: IsdarlinM`, then `Map historical attack surface and separate history from current exposure.` Use `fossilscope --no-color COMMAND`, `fossilscope COMMAND --no-color`, or `NO_COLOR=1` for plain terminal presentation. The banner is emitted to interactive stderr so JSON and redirected stdout remain clean. See `docs/cli-presentation.md`.
 
 ## Quickstart
 
@@ -108,7 +109,9 @@ fossilscope web imr --root /path/to/workspaces
 
 Workspace names are not filesystem paths. `../` traversal and workspace symlinks are rejected rather than allowing a named workspace to escape the selected root. Missing or invalid workspaces produce an actionable CLI error and do not emit a Python traceback.
 
-The Web UI includes temporal views, fossil candidates, lifecycle information, search, evidence detail and real-time job status. The complete app also exposes the vNext analysis routes and `/api/v1/capabilities`. It is **not an operating-system web shell**.
+The existing temporal Web UI remains available with fossil candidates, lifecycle information, search, evidence detail and real-time job status. `/console` adds the Web Command Console, whose catalog is generated from `fossilscope.cli_all`; a standalone test requires the Web and CLI command-path sets to be exactly equal.
+
+The console is **not an operating-system web shell**. It invokes only the fixed SRIC runner with `shell=False`, disabled stdin and a structured argv array. Mutating commands require explicit approval, while FossilScope passive-first, scope and terms-acknowledgement gates remain authoritative. See `docs/web/cli-parity.md`.
 
 ## Signed updates
 
@@ -136,7 +139,7 @@ Full repository release gate:
 python scripts/release-gate.py
 ```
 
-Machine-readable evidence is written under `build/release-evidence/`. A release requires PASS for the exact source commit; merely setting the package version to 0.5.4 is not release evidence.
+Machine-readable evidence is written under `build/release-evidence/`. A release requires PASS for the exact source commit; merely setting the package version to 0.5.5 is not release evidence.
 
 ## Uninstall
 

@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.5.10 - 2026-08-09
+- Hardened repair installation so an obsolete, incomplete or broken Python environment rebuilds only `~/.fossilscope/venv`; workspaces, configuration and evidence are never removed.
+- Termux now prefers a writable `$PREFIX/bin` already present in `PATH`, making the `fossilscope` command immediately reachable after install.
+- Windows installer PATH updates now use SRIC Core's registry-backed `sric.install_path` helper instead of `setx`, preventing PATH truncation/rewrite risks and broadcasting environment changes safely.
+- Preserved the 0.5.9 atomic FossilScope + explicit first-party SRIC resolver fix and updated the immutable SRIC pin/runtime lock to SRIC Core 0.5.10.
+- Expanded installer regression coverage for venv-only repair, Termux path selection, safe Windows PATH handling, Python discovery, dependency integrity and CLI help smokes.
+
 ## 0.5.9 - 2026-08-09
 - Fixed `ResolutionImpossible` during clean/repair installation when `fossilscope` depended on the first-party `sric-core` package that is intentionally distributed from an immutable GitHub snapshot rather than PyPI.
 - Linux/Termux and Windows now resolve FossilScope plus the explicit SRIC source in one pip transaction, so `--force-reinstall` never launches a product-only resolver pass that has no first-party candidate.

@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.5.7 - 2026-08-09
+- Added the full Web Feature Workbench at `/workbench`, generated from `fossilscope.cli_all`, with structured responsive controls for every public CLI command and argument.
+- Fixed the native dashboard discoverability gap shown on mobile: the root page now exposes visible Dashboard / All Features / Advanced Console navigation and a full-feature callout.
+- Preserved passive-first semantics, named-workspace safety, scope/terms acknowledgement and active-action policy/approval gates.
+- Updated SRIC Core floor, runtime lock and exact first-party pin to the signed SRIC 0.5.6 Workbench release.
+- Added exhaustive CLI help/argument-to-Web parity tests and native temporal API smoke coverage.
+
 ## 0.5.6 - 2026-08-08
 - Made the official FossilScope updater zero-config: `fossilscope update`, `fossilscope update --check`, and `fossilscope update --force` no longer require user-supplied manifest/key configuration.
 - Delegated official update trust and immutable GitHub signed-commit validation to SRIC Core 0.5.5 while preserving same-version force reinstall and downgrade rejection.

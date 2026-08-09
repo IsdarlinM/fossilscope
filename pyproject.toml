@@ -4,7 +4,7 @@ build-backend="setuptools.build_meta"
 
 [project]
 name="fossilscope"
-version="0.5.8"
+version="0.5.9"
 description="Temporal security graph and attack-surface archaeology."
 readme="README.md"
 requires-python=">=3.11"

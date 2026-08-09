@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.5.8 - 2026-08-09
+- Fixed the reported `ModuleNotFoundError: No module named 'sric.web_workbench'` failure caused by a newer FossilScope being installed beside an older SRIC runtime.
+- Shared Web modules are now loaded lazily; stale/corrupt SRIC no longer makes every FossilScope command fail at import time, and an unavailable Workbench returns an actionable 503 compatibility response.
+- `doctor` and `/api/v1/runtime-compatibility` now verify the exact SRIC version range and required Web Console/Workbench modules rather than accepting any `0.5.*` runtime.
+- Official update repair can bridge signed SRIC 0.5.5→0.5.6→0.5.7 snapshots before updating FossilScope, and same-version corrupt cores are force-reinstalled through the verified official channel.
+- Linux/Termux and Windows installers now force-reinstall the pinned signed SRIC/FossilScope packages, run `pip check`, import-probe shared Web modules, verify the core version range, and execute doctor/capability/help smokes without deleting user workspaces.
+- Added regression coverage reproducing the exact Termux failure shape, signed transition chain, same-version repair, degraded Workbench behavior, every public CLI help form and exact ordered CLI/Web parameter parity.
+- New installs pin signed SRIC Core 0.5.8.
+
 ## 0.5.7 - 2026-08-09
 - Added the full Web Feature Workbench at `/workbench`, generated from `fossilscope.cli_all`, with structured responsive controls for every public CLI command and argument.
 - Fixed the native dashboard discoverability gap shown on mobile: the root page now exposes visible Dashboard / All Features / Advanced Console navigation and a full-feature callout.

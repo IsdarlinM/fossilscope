@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.5.9 - 2026-08-09
+- Fixed `ResolutionImpossible` during clean/repair installation when `fossilscope` depended on the first-party `sric-core` package that is intentionally distributed from an immutable GitHub snapshot rather than PyPI.
+- Linux/Termux and Windows now resolve FossilScope plus the explicit SRIC source in one pip transaction, so `--force-reinstall` never launches a product-only resolver pass that has no first-party candidate.
+- Updated the immutable first-party SRIC pin and runtime lock to SRIC Core 0.5.9.
+- Fixed Linux PATH persistence so `.profile` does not inject literal quote characters into PATH.
+- Fixed Windows Python discovery to accept any installed Python 3 runtime that satisfies `>=3.11`, instead of requiring `py -3.11` specifically.
+- Installers now bootstrap pip/setuptools/wheel, run `pip check`, verify shared Web modules, and smoke-test `--help`, `-h`, and `help` before reporting success.
+- Added standalone regressions for the exact resolver topology, first-party pin, PATH quoting and Windows Python selection.
+
 ## 0.5.8 - 2026-08-09
 - Fixed the reported `ModuleNotFoundError: No module named 'sric.web_workbench'` failure caused by a newer FossilScope being installed beside an older SRIC runtime.
 - Shared Web modules are now loaded lazily; stale/corrupt SRIC no longer makes every FossilScope command fail at import time, and an unavailable Workbench returns an actionable 503 compatibility response.

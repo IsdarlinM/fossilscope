@@ -1,7 +1,7 @@
 # FossilScope
 
 ```text
-FossilScope :: v0.5.5
+FossilScope :: v0.5.6
 Developer: IsdarlinM
 
 Map historical attack surface and separate history from current exposure.
@@ -34,10 +34,10 @@ The absence of another Sentinel Forge product is never a FossilScope startup err
 - passive-first re-observation prioritization and bounded retry planning;
 - organization-era-aware integration capabilities when compatible products are present;
 - SRIC 0.5.x workspace, graph, jobs/SSE, lineage, notebook/search and confidence primitives;
-- local API/Web UI, CLI, reports, offline demo and signed update primitive;
+- local API/Web UI, CLI, reports and offline demo;
 - complete Web/API factory with vNext analysis and capability routes;
 - validated named-workspace resolution for Web/extended CLI commands, with traversal/symlink escape rejection and actionable errors;
-- signed update flow with safe same-version `update --force` reinstall support;
+- zero-config official update flow with safe same-version `update --force` reinstall support;
 - Web Command Console with exact public CLI command-tree parity and real-time jobs;
 - professional Rich/Typer terminal presentation with subdued green banner and `--no-color` support.
 
@@ -69,7 +69,7 @@ The installers resolve the compatible SRIC Core package automatically. `SRIC_COR
 
 ## CLI presentation
 
-Interactive terminals display a compact subdued-green banner ordered as `FossilScope :: v0.5.5`, `Developer: IsdarlinM`, then `Map historical attack surface and separate history from current exposure.` Use `fossilscope --no-color COMMAND`, `fossilscope COMMAND --no-color`, or `NO_COLOR=1` for plain terminal presentation. The banner is emitted to interactive stderr so JSON and redirected stdout remain clean. See `docs/cli-presentation.md`.
+Interactive terminals display a compact subdued-green banner ordered as `FossilScope :: v0.5.6`, `Developer: IsdarlinM`, then `Map historical attack surface and separate history from current exposure.` Use `fossilscope --no-color COMMAND`, `fossilscope COMMAND --no-color`, or `NO_COLOR=1` for plain terminal presentation. The banner is emitted to interactive stderr so JSON and redirected stdout remain clean. See `docs/cli-presentation.md`.
 
 ## Quickstart
 
@@ -113,9 +113,9 @@ The existing temporal Web UI remains available with fossil candidates, lifecycle
 
 The console is **not an operating-system web shell**. It invokes only the fixed SRIC runner with `shell=False`, disabled stdin and a structured argv array. Mutating commands require explicit approval, while FossilScope passive-first, scope and terms-acknowledgement gates remain authoritative. See `docs/web/cli-parity.md`.
 
-## Signed updates
+## Updates
 
-The updater accepts only an Ed25519-signed manifest and a SHA-256 verified wheel. Configure `FOSSILSCOPE_RELEASE_MANIFEST_URL` plus `FOSSILSCOPE_RELEASE_PUBLIC_KEY`, or pass `--manifest` and `--public-key`.
+The official update path is zero-config:
 
 ```bash
 fossilscope update --check
@@ -123,7 +123,11 @@ fossilscope update
 fossilscope update --force
 ```
 
-`--force` reinstalls the selected signed release even when that exact version is already installed. It may install a newer signed version but never downgrades; `--check` and `--force` cannot be combined. No unsigned or blind `git pull` fallback is used. Until the official signed release channel is published, release-channel configuration remains explicit.
+Normal users do **not** provide a manifest or public key. SRIC resolves only the fixed official `IsdarlinM/fossilscope` channel, requires the selected immutable release commit to be reported by GitHub as signature-verified, validates the exact source snapshot and package metadata, backs up state, installs without a shell, and verifies the installed distribution version.
+
+`--force` reinstalls the official release even when that exact version is already installed. It may install a newer official release but never downgrades; `--check` and `--force` cannot be combined. Normal upgrades require rollback metadata; same-version forced reinstalls use the verified target snapshot as the recovery package.
+
+`--manifest` and `--public-key` remain available together only as an advanced custom/private-channel override. Custom channels retain Ed25519 manifest and SHA-256 wheel verification. No blind `git pull` fallback is used. See `docs/release/update.md`.
 
 ## Validation gates
 
@@ -139,7 +143,7 @@ Full repository release gate:
 python scripts/release-gate.py
 ```
 
-Machine-readable evidence is written under `build/release-evidence/`. A release requires PASS for the exact source commit; merely setting the package version to 0.5.5 is not release evidence.
+Machine-readable evidence is written under `build/release-evidence/`. A release requires PASS for the exact source commit; merely setting the package version is not release evidence.
 
 ## Uninstall
 

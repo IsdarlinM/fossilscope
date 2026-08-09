@@ -1,7 +1,7 @@
 # FossilScope
 
 ```text
-FossilScope :: v0.5.3
+FossilScope :: v0.5.4
 Developer: IsdarlinM
 
 Map historical attack surface and separate history from current exposure.
@@ -37,6 +37,7 @@ The absence of another Sentinel Forge product is never a FossilScope startup err
 - local API/Web UI, CLI, reports, offline demo and signed update primitive;
 - complete Web/API factory with vNext analysis and capability routes;
 - validated named-workspace resolution for Web/extended CLI commands, with traversal/symlink escape rejection and actionable errors;
+- signed update flow with safe same-version `update --force` reinstall support;
 - professional Rich/Typer terminal presentation with subdued green banner and `--no-color` support.
 
 ## Exposure lifecycle controls
@@ -67,7 +68,7 @@ The installers resolve the compatible SRIC Core package automatically. `SRIC_COR
 
 ## CLI presentation
 
-Interactive terminals display a compact subdued-green banner ordered as `FossilScope :: v0.5.3`, `Developer: IsdarlinM`, then `Map historical attack surface and separate history from current exposure.` Use `fossilscope --no-color COMMAND`, `fossilscope COMMAND --no-color`, or `NO_COLOR=1` for plain terminal presentation. The banner is emitted to interactive stderr so JSON and redirected stdout remain clean. See `docs/cli-presentation.md`.
+Interactive terminals display a compact subdued-green banner ordered as `FossilScope :: v0.5.4`, `Developer: IsdarlinM`, then `Map historical attack surface and separate history from current exposure.` Use `fossilscope --no-color COMMAND`, `fossilscope COMMAND --no-color`, or `NO_COLOR=1` for plain terminal presentation. The banner is emitted to interactive stderr so JSON and redirected stdout remain clean. See `docs/cli-presentation.md`.
 
 ## Quickstart
 
@@ -109,6 +110,18 @@ Workspace names are not filesystem paths. `../` traversal and workspace symlinks
 
 The Web UI includes temporal views, fossil candidates, lifecycle information, search, evidence detail and real-time job status. The complete app also exposes the vNext analysis routes and `/api/v1/capabilities`. It is **not an operating-system web shell**.
 
+## Signed updates
+
+The updater accepts only an Ed25519-signed manifest and a SHA-256 verified wheel. Configure `FOSSILSCOPE_RELEASE_MANIFEST_URL` plus `FOSSILSCOPE_RELEASE_PUBLIC_KEY`, or pass `--manifest` and `--public-key`.
+
+```bash
+fossilscope update --check
+fossilscope update
+fossilscope update --force
+```
+
+`--force` reinstalls the selected signed release even when that exact version is already installed. It may install a newer signed version but never downgrades; `--check` and `--force` cannot be combined. No unsigned or blind `git pull` fallback is used. Until the official signed release channel is published, release-channel configuration remains explicit.
+
 ## Validation gates
 
 Standalone conformance:
@@ -123,7 +136,7 @@ Full repository release gate:
 python scripts/release-gate.py
 ```
 
-Machine-readable evidence is written under `build/release-evidence/`. A release requires PASS for the exact source commit; merely setting the package version to 0.5.3 is not release evidence.
+Machine-readable evidence is written under `build/release-evidence/`. A release requires PASS for the exact source commit; merely setting the package version to 0.5.4 is not release evidence.
 
 ## Uninstall
 

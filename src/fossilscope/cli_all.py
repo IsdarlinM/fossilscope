@@ -8,6 +8,7 @@ from . import cli_evolution as _cli_evolution  # noqa: F401
 from . import cli_planning as _cli_planning  # noqa: F401
 from .cli_vnext import app
 from . import cli_capabilities as _cli_capabilities  # noqa: F401
+from . import cli_update as _cli_update  # noqa: F401,E402
 
 __all__ = ["BRAND", "app", "normalize_help_argv", "run"]
 

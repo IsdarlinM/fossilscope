@@ -13,12 +13,15 @@ if [ -x "$VENV/bin/python" ]; then "$VENV/bin/python" -c 'import sys; raise Syst
 "$VENV/bin/python" -m pip install --upgrade pip setuptools wheel || { echo "Failed to bootstrap pip/setuptools/wheel." >&2; exit 3; }
 if [ -n "${SRIC_CORE_SOURCE:-}" ]; then [ -f "$SRIC_CORE_SOURCE/pyproject.toml" ] || { echo "SRIC_CORE_SOURCE is invalid." >&2; exit 3; }; "$VENV/bin/python" -m pip install --upgrade -c "$CONSTRAINTS" "$SRIC_CORE_SOURCE" "$REPO_ROOT"; else [ -f "$FIRST_PARTY" ] || { echo "Missing first-party dependency manifest: $FIRST_PARTY" >&2; exit 3; }; "$VENV/bin/python" -m pip install --upgrade -c "$CONSTRAINTS" -r "$FIRST_PARTY" "$REPO_ROOT"; fi || { echo "Atomic FossilScope/SRIC installation failed." >&2; exit 3; }
 "$VENV/bin/python" -m pip check || { echo "Installed dependency graph is inconsistent." >&2; exit 3; }
-"$VENV/bin/python" -c 'import importlib.metadata as m; import sric.web_console, sric.web_workbench; v=tuple(int(x) for x in m.version("sric-core").split(".")[:3]); raise SystemExit(0 if (0,5,7)<=v<(0,6,0) else 1)' || { echo "SRIC Core runtime integrity check failed." >&2; exit 3; }
+"$VENV/bin/python" -c 'import importlib.metadata as m; import sric.web_console, sric.web_workbench, sric.web_catalog; v=tuple(int(x) for x in m.version("sric-core").split(".")[:3]); raise SystemExit(0 if (0,5,11)<=v<(0,6,0) else 1)' || { echo "SRIC Core runtime integrity check failed; required >=0.5.11,<0.6." >&2; exit 3; }
 ln -sfn "$VENV/bin/$CMD" "$BIN_DIR/$CMD"
 case ":${PATH:-}:" in *":$BIN_DIR:"*) ;; *) PROFILE="${HOME}/.profile"; PATH_LINE='export PATH="$HOME/.local/bin:$PATH"'; touch "$PROFILE"; grep -F "$PATH_LINE" "$PROFILE" >/dev/null 2>&1 || printf '\n# Sentinel Forge tools\n%s\n' "$PATH_LINE" >> "$PROFILE" ;; esac
-SENTINEL_BANNER=never "$VENV/bin/$CMD" doctor --json
-SENTINEL_BANNER=never "$VENV/bin/$CMD" capabilities >/dev/null
-SENTINEL_BANNER=never "$VENV/bin/$CMD" --help >/dev/null
-SENTINEL_BANNER=never "$VENV/bin/$CMD" -h >/dev/null
-SENTINEL_BANNER=never "$VENV/bin/$CMD" help >/dev/null
+CHECK_LOG="$INSTALL_ROOT/install-check.log"; : > "$CHECK_LOG"
+run_check(){ label="$1"; shift; if ! SENTINEL_BANNER=never "$@" >>"$CHECK_LOG" 2>&1; then printf 'Installation validation failed: %s\n' "$label" >&2; cat "$CHECK_LOG" >&2; exit 4; fi; }
+run_check doctor "$VENV/bin/$CMD" doctor --json
+run_check capabilities "$VENV/bin/$CMD" capabilities
+run_check help "$VENV/bin/$CMD" --help
+run_check short-help "$VENV/bin/$CMD" -h
+run_check help-alias "$VENV/bin/$CMD" help
+rm -f "$CHECK_LOG"
 printf '%s installed/repaired successfully in standalone mode.\nCommand: %s\n' "$PROJECT" "$CMD"

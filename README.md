@@ -1,7 +1,7 @@
 # FossilScope
 
 ```text
-FossilScope :: v0.5.10
+FossilScope :: v0.5.11
 Developer: IsdarlinM
 
 Map historical attack surface and separate history from current exposure.
@@ -36,6 +36,7 @@ fossilscope capabilities
 - zero-config official update flow with same-version `update --force`, rollback and first-party runtime repair;
 - exact SRIC distribution/module compatibility checks in `doctor` and `/api/v1/runtime-compatibility`;
 - **full Web Feature Workbench** with every public FossilScope CLI command and argument represented as structured responsive controls;
+- JSON-safe shared Web command catalog generation, preventing non-primitive Typer metadata from surfacing as an opaque HTTP 500;
 - lazy shared-Web loading so a stale/corrupt SRIC cannot crash every FossilScope CLI command at import time;
 - actionable degraded `/workbench` 503 behavior when a shared UI module is unavailable;
 - advanced Web Command Console with exact public CLI command-tree parity and real-time jobs;
@@ -65,9 +66,11 @@ fossilscope doctor --json
 fossilscope capabilities
 ```
 
-The normal installer pins SRIC Core to an immutable GitHub commit and resolves that explicit first-party source **in the same pip transaction as FossilScope**. This is important because `sric-core` is intentionally not discovered from PyPI; a separate product-only `--force-reinstall` would make pip search the public index and can produce `ResolutionImpossible` even after SRIC was already bootstrapped. `SRIC_CORE_SOURCE=/path/to/sric-core` remains an explicit development/release-validation override only.
+The normal installer pins SRIC Core to an immutable GitHub commit and resolves that explicit first-party source **in the same pip transaction as FossilScope**. This is important because `sric-core` is intentionally not discovered from PyPI; a separate product-only reinstall would make pip search the public index and can produce `ResolutionImpossible` even after SRIC was already bootstrapped. `SRIC_CORE_SOURCE=/path/to/sric-core` remains an explicit development/release-validation override only.
 
-The installers are repair-capable and preserve workspaces/configuration/evidence. They validate the host Python and any existing venv; an obsolete, incomplete or broken runtime rebuilds **only** `~/.fossilscope/venv`. They bootstrap `pip`, `setuptools` and `wheel`, force-reinstall the constrained product + explicit SRIC source, run `pip check`, import `sric.web_console` and `sric.web_workbench`, verify the supported SRIC version range, and run doctor/capability plus `--help`, `-h` and `help` smokes before reporting success.
+The installers are idempotent and repair-capable while preserving workspaces/configuration/evidence. They validate the host Python and any existing venv; an obsolete, incomplete or broken runtime rebuilds **only** `~/.fossilscope/venv`. They bootstrap `pip`, `setuptools` and `wheel`, resolve the constrained product + explicit SRIC source, run `pip check`, import `sric.web_console`, `sric.web_workbench` and `sric.web_catalog`, verify SRIC `>=0.5.11,<0.6`, and run doctor/capability plus `--help`, `-h` and `help` smokes before reporting success.
+
+Installer-internal CLI smokes use `SENTINEL_BANNER=never`; their output is written to a temporary validation log and is shown only when a check fails. A successful install therefore no longer prints the FossilScope banner repeatedly. Normal installation also does not use `--force-reinstall`; that behavior remains reserved for explicit repair/update force operations.
 
 On Termux a writable `$PREFIX/bin` already present in `PATH` is preferred so the command is immediately available. Standard Linux falls back to `~/.local/bin` and persists the canonical profile entry only when needed. Windows uses SRIC's registry-backed `sric.install_path` helper instead of `setx`, preserving the existing user PATH value type and broadcasting the environment change; any Python 3 interpreter satisfying `>=3.11` is accepted.
 
@@ -79,7 +82,7 @@ git pull --ff-only
 ./scripts/install-linux.sh
 fossilscope doctor --json
 ~/.fossilscope/venv/bin/python -m pip check
-~/.fossilscope/venv/bin/python -c 'import sric.web_console, sric.web_workbench; print("SRIC Web runtime OK")'
+~/.fossilscope/venv/bin/python -c 'import sric.web_console, sric.web_workbench, sric.web_catalog; print("SRIC Web runtime OK")'
 fossilscope web imr
 ```
 
@@ -87,7 +90,7 @@ Do not delete `~/.fossilscope/` to repair this class of runtime problem; workspa
 
 ## CLI presentation
 
-Interactive terminals display a compact subdued-green banner ordered as `FossilScope :: v0.5.10`, `Developer: IsdarlinM`, then `Map historical attack surface and separate history from current exposure.` Use `fossilscope --no-color COMMAND`, `fossilscope COMMAND --no-color`, or `NO_COLOR=1` for plain terminal presentation.
+Interactive terminals display a compact subdued-green banner ordered as `FossilScope :: v0.5.11`, `Developer: IsdarlinM`, then `Map historical attack surface and separate history from current exposure.` Use `fossilscope --no-color COMMAND`, `fossilscope COMMAND --no-color`, or `NO_COLOR=1` for plain terminal presentation.
 
 The help contract covers `fossilscope --help`, `fossilscope -h`, `fossilscope help`, `fossilscope COMMAND --help`, `fossilscope COMMAND -h` and `fossilscope COMMAND help`.
 
@@ -123,6 +126,8 @@ The dashboard root is intentionally a quick temporal view and exposes visible na
 
 The Workbench is derived from the installed CLI tree; `/api/v1/workbench/coverage` must report exact command/parameter parity. `/api/v1/runtime-compatibility` reports the installed core version, required modules and reasons when incompatible.
 
+The native CSP permits same-origin shared Web CSS/JS while retaining `object-src 'none'`, `base-uri 'none'` and `frame-ancestors 'none'`. The command catalog is normalized to JSON-safe primitives before FastAPI serialization, so `Path`, enum/container defaults and unusual Typer metadata do not produce the previous `catalog HTTP 500` failure.
+
 Shared Web modules are loaded lazily. If the Workbench is missing, the native temporal dashboard remains available and `/workbench` returns `RUNTIME_INCOMPATIBLE`/503 with repair guidance instead of raising `ModuleNotFoundError` during CLI startup.
 
 Web command execution uses the fixed SRIC runner with `shell=False`, disabled stdin, CSRF protection, secret redaction, bounded/cancellable jobs and SSE output. FossilScope remains passive-first; scope, terms acknowledgement, Policy and approval gates remain authoritative.
@@ -148,7 +153,7 @@ python -m sric.standalone_gate --root .
 python scripts/release-gate.py
 ```
 
-The 0.5.10 installer regressions cover the exact unpublished-first-party resolver topology, immutable SRIC pin, runtime lock, venv-only repair, Termux `$PREFIX/bin`, safe Windows PATH handling, Python selection and dependency/import/help smokes. The stale-SRIC regression suite remains in place, and existing unit/integration/E2E/security suites continue to cover timeline, fossils, lifecycle, graph/clusters, passive adapters, bounded HTTPS collection, scope/terms gates, re-observation, workspace safety, import hardening and native Web/API routes.
+The 0.5.11 installer regressions cover atomic first-party resolution, immutable SRIC 0.5.11 pin/lock, venv-only repair, Termux `$PREFIX/bin`, safe Windows PATH handling, quiet banner-free installation smokes and dependency/import/help checks. Web regressions verify `/console` plus its CSS/JS assets, a non-empty HTTP-200 command catalog, `/workbench`, its feature catalog and exact CLI/Web coverage.
 
 Machine-readable evidence is written under `build/release-evidence/`. A release requires PASS for the exact source commit.
 

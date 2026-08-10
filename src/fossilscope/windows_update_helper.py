@@ -95,6 +95,16 @@ def _require_prebuilt_wheel(path: str, *, label: str) -> None:
         )
 
 
+def _lock_evidence(lock: Path) -> tuple[bool, str]:
+    try:
+        raw = json.loads(lock.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError, TypeError):
+        return False, "UNKNOWN"
+    forced = bool(raw.get("forced", False)) if isinstance(raw, dict) else False
+    action = str(raw.get("action", "UNKNOWN")) if isinstance(raw, dict) else "UNKNOWN"
+    return forced, action
+
+
 def main() -> int:
     (
         _script,
@@ -113,9 +123,12 @@ def main() -> int:
     result = Path(result_path)
     log = Path(log_path)
     staging = Path(staging_root)
+    forced, action = _lock_evidence(lock)
     payload: dict[str, object] = {
         "product": "fossilscope",
         "target_version": target_version,
+        "forced": forced,
+        "action": action,
         "status": "FAILED",
         "rollback_attempted": False,
         "rollback_succeeded": False,

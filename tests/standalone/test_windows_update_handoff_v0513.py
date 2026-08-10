@@ -142,6 +142,21 @@ def test_built_wheel_metadata_is_verified_before_handoff(tmp_path: Path) -> None
         windows_update._verify_built_wheel(valid, expected_version="0.5.17")
 
 
+def test_helper_preserves_force_action_from_lock(tmp_path: Path) -> None:
+    lock = tmp_path / "update-in-progress.json"
+    lock.write_text(
+        '{"forced": true, "action": "FORCED_REINSTALL"}',
+        encoding="utf-8",
+    )
+    assert windows_update_helper._lock_evidence(lock) == (
+        True,
+        "FORCED_REINSTALL",
+    )
+
+    lock.write_text("not-json", encoding="utf-8")
+    assert windows_update_helper._lock_evidence(lock) == (False, "UNKNOWN")
+
+
 def test_helper_waits_before_mutating_and_verifies_runtime_plus_complete_web_contract() -> None:
     helper = Path(windows_update.__file__).with_name("windows_update_helper.py")
     source = helper.read_text(encoding="utf-8")
@@ -152,6 +167,9 @@ def test_helper_waits_before_mutating_and_verifies_runtime_plus_complete_web_con
     assert "OpenProcess.restype = ctypes.c_void_p" in source
     assert "artifact must be a prebuilt wheel" in source
     assert "creationflags=_hidden_creationflags()" in source
+    assert "forced, action = _lock_evidence(lock)" in source
+    assert '"forced": forced' in source
+    assert '"action": action' in source
     assert "import annotated_types, pydantic, fossilscope, sric.web_guardrails" in source
     assert "install_json_safe_catalog()" in source
     assert "build_json_safe_command_catalog('fossilscope.cli_all')" in source

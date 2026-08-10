@@ -129,8 +129,9 @@ def test_every_public_command_and_parameter_parses_and_maps_to_web(tmp_path: Pat
                 assert str(cli_meta["opts"][0]).startswith("-"), (path, raw.name)
                 assert str(web_meta["primary_opt"]).startswith("-"), (path, raw.name)
 
-        argv = _valid_parse_argv(cli_params, tmp_path / path.replace(" ", "-"))
-        (tmp_path / path.replace(" ", "-")).mkdir(parents=True, exist_ok=True)
+        command_tmp = tmp_path / path.replace(" ", "-")
+        command_tmp.mkdir(parents=True, exist_ok=True)
+        argv = _valid_parse_argv(cli_params, command_tmp)
         with command.make_context(path, argv, resilient_parsing=False) as context:
             assert context.params is not None, path
 

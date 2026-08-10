@@ -38,6 +38,8 @@ jobs:
         run: python -m pytest -q tests/e2e/test_cli_all_commands_functional.py
       - name: Every CLI/Web parameter and controlled parser error
         run: python -m pytest -q tests/e2e/test_cli_web_parameter_matrix_v0516.py
+      - name: CLI callback exception boundaries
+        run: python -m pytest -q tests/e2e/test_cli_exception_boundaries_v0516.py
       - name: All supported CLI help forms
         run: python -m pytest -q tests/standalone/test_standalone_contract_v05.py
       - name: Shared Security Workspace contract

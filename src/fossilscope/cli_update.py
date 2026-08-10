@@ -24,7 +24,10 @@ def update(
     force: bool = typer.Option(
         False,
         "--force",
-        help="Reinstall the official release even when that same version is already installed. Never downgrades.",
+        help=(
+            "Reinstall the current official-channel release even when that exact version is "
+            "already installed. Does not select unreleased branches and never downgrades."
+        ),
     ),
     manifest: Optional[str] = typer.Option(
         None,

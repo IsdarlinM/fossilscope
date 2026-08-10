@@ -43,7 +43,7 @@ jobs:
       - name: All supported CLI help forms
         run: python -m pytest -q tests/standalone/test_standalone_contract_v05.py
       - name: Silent Windows update handoff regression
-        run: python -m pytest -q tests/standalone/test_windows_update_handoff_v0513.py
+        run: python -m pytest -q tests/standalone/test_windows_update_handoff_v0513.py tests/standalone/test_windows_update_smoke_script_v0516.py
       - name: Shared Security Workspace contract
         run: python -m pytest -q tests/e2e/test_security_workspace_v0514.py
       - name: Unified Dashboard, API Reference and catalog incident regression

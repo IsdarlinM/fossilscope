@@ -14,6 +14,10 @@ from .sric_bootstrap import ensure_for_official_update
 from .windows_update import stage_official_windows_update
 
 
+def _is_windows() -> bool:
+    return os.name == "nt"
+
+
 @app.command("update")
 def update(
     check: bool = typer.Option(False, "--check", help="Check the official release channel only."),
@@ -47,7 +51,7 @@ def update(
         if not check and not custom_requested:
             ensure_for_official_update()
 
-        if os.name == "nt" and not check and not custom_requested:
+        if _is_windows() and not check and not custom_requested:
             payload = stage_official_windows_update(
                 current_version=__version__,
                 force=force,

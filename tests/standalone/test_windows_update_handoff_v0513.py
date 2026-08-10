@@ -83,10 +83,12 @@ def test_same_version_force_is_staged_until_parent_exits(tmp_path: Path, monkeyp
 
 
 def test_helper_waits_before_mutating_the_live_runtime() -> None:
-    source = windows_update.HELPER_SOURCE
+    helper = Path(windows_update.__file__).with_name("windows_update_helper.py")
+    source = helper.read_text(encoding="utf-8")
     wait_position = source.index("wait_for_parent(int(parent_pid))")
     pip_position = source.index('"pip",\n            "install"')
     assert wait_position < pip_position
+    assert "OpenProcess.restype = ctypes.c_void_p" in source
     assert "import annotated_types, pydantic, fossilscope" in source
     assert '[runtime_python, "-m", "pip", "check"]' in source
     assert "--force-reinstall" in source

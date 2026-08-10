@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from types import ModuleType
 
-SRIC_MIN_FULL = "0.5.11"
+SRIC_MIN_FULL = "0.5.12"
 SRIC_MAX_EXCLUSIVE = "0.6.0"
 SRIC_REQUIRED_MODULES = ("sric.web_console", "sric.web_workbench", "sric.web_catalog")
 SRIC_REPOSITORY = "IsdarlinM/sric-core"

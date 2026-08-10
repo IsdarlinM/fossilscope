@@ -33,7 +33,7 @@ def create_app(workspace: Path) -> FastAPI:
     async def hdr(req: Any, call_next: Any) -> Any:
         response = await call_next(req)
         response.headers["Content-Security-Policy"] = (
-            "default-src 'self'; script-src 'self'; style-src 'unsafe-inline'; "
+            "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; "
             "connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'"
         )
         response.headers["X-Content-Type-Options"] = "nosniff"

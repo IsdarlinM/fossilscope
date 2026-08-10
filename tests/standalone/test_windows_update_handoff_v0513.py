@@ -46,8 +46,16 @@ def test_same_version_force_is_staged_until_parent_exits(tmp_path: Path, monkeyp
         return object()
 
     monkeypatch.setattr(windows_update.tempfile, "mkdtemp", fake_mkdtemp)
-    monkeypatch.setattr(windows_update.sric_updater, "_load_official_channel", lambda _product: _channel())
-    monkeypatch.setattr(windows_update.sric_updater, "_download_official_archive", fake_download)
+    monkeypatch.setattr(
+        windows_update.sric_updater,
+        "_load_official_channel",
+        lambda _product: _channel(),
+    )
+    monkeypatch.setattr(
+        windows_update.sric_updater,
+        "_download_official_archive",
+        fake_download,
+    )
     monkeypatch.setattr(windows_update.subprocess, "Popen", fake_popen)
 
     payload = windows_update.stage_official_windows_update(
@@ -66,7 +74,9 @@ def test_same_version_force_is_staged_until_parent_exits(tmp_path: Path, monkeyp
     assert command[4] == command[5]
     assert "apply_windows_update.py" in command[1]
 
-    wrapper = (tmp_path / ".local" / "bin" / "fossilscope.cmd").read_text(encoding="utf-8")
+    wrapper = (tmp_path / ".local" / "bin" / "fossilscope.cmd").read_text(
+        encoding="utf-8"
+    )
     assert "update-in-progress.json" in wrapper
     assert "venv\\Scripts\\fossilscope.exe" in wrapper
     assert (tmp_path / ".fossilscope" / "update-in-progress.json").is_file()
@@ -78,8 +88,8 @@ def test_helper_waits_before_mutating_the_live_runtime() -> None:
     pip_position = source.index('"pip",\n            "install"')
     assert wait_position < pip_position
     assert "import annotated_types, pydantic, fossilscope" in source
-    assert "pip\", \"check" not in source  # keep command construction explicit and auditable
     assert '[runtime_python, "-m", "pip", "check"]' in source
+    assert "--force-reinstall" in source
 
 
 def test_cli_routes_official_windows_update_to_handoff(monkeypatch) -> None:

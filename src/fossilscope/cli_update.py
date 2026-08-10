@@ -58,11 +58,19 @@ def update(
             )
             typer.echo(json.dumps(payload, indent=2))
             if payload.get("staged"):
-                typer.echo(
-                    "Windows update staged and cryptographically verified. "
-                    "It will be applied after this FossilScope process exits; "
-                    f"final status: {payload.get('result_file')}."
-                )
+                if payload.get("action") == "FORCED_REINSTALL":
+                    typer.echo(
+                        "Verified same-version reinstall staged for Windows. "
+                        "The post-exit helper runs without opening additional console windows; "
+                        f"final status: {payload.get('result_file')}."
+                    )
+                else:
+                    typer.echo(
+                        "Windows update staged and cryptographically verified. "
+                        "It will be applied after this FossilScope process exits without opening "
+                        "additional console windows; "
+                        f"final status: {payload.get('result_file')}."
+                    )
             return
 
         status = perform_product_update(

@@ -37,6 +37,15 @@ def wait_for_parent(pid: int, timeout_ms: int = 300000) -> None:
         kernel32.CloseHandle(handle)
 
 
+def _hidden_creationflags(platform_name: str | None = None) -> int:
+    """Return flags that keep helper child processes out of visible consoles."""
+
+    platform_value = os.name if platform_name is None else platform_name
+    if platform_value != "nt":
+        return 0
+    return getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000)
+
+
 def run_logged(command: list[str], log_path: Path) -> None:
     with log_path.open("a", encoding="utf-8", errors="replace") as log:
         log.write("$ " + subprocess.list2cmdline(command) + "\n")
@@ -48,7 +57,14 @@ def run_logged(command: list[str], log_path: Path) -> None:
             stdout=log,
             stderr=subprocess.STDOUT,
             shell=False,
-            env={**os.environ, "SENTINEL_BANNER": "never", "NO_COLOR": "1"},
+            env={
+                **os.environ,
+                "SENTINEL_BANNER": "never",
+                "NO_COLOR": "1",
+                "PIP_DISABLE_PIP_VERSION_CHECK": "1",
+                "PYTHONUNBUFFERED": "1",
+            },
+            creationflags=_hidden_creationflags(),
         )
 
 
@@ -69,6 +85,14 @@ def verify(runtime_python: str, expected_version: str, log_path: Path) -> None:
     )
     run_logged([runtime_python, "-c", probe], log_path)
     run_logged([runtime_python, "-m", "pip", "check"], log_path)
+
+
+def _require_prebuilt_wheel(path: str, *, label: str) -> None:
+    artifact = Path(path)
+    if artifact.suffix.lower() != ".whl" or not artifact.is_file():
+        raise RuntimeError(
+            f"{label} artifact must be a prebuilt wheel; refusing detached source builds"
+        )
 
 
 def main() -> int:
@@ -97,6 +121,8 @@ def main() -> int:
         "rollback_succeeded": False,
     }
     try:
+        _require_prebuilt_wheel(target_archive, label="target")
+        _require_prebuilt_wheel(rollback_archive, label="rollback")
         wait_for_parent(int(parent_pid))
         install = [
             runtime_python,
@@ -106,6 +132,7 @@ def main() -> int:
             "--upgrade",
             "--no-deps",
             "--force-reinstall",
+            "--disable-pip-version-check",
             target_archive,
         ]
         run_logged(install, log)
@@ -114,7 +141,7 @@ def main() -> int:
         payload["installed"] = True
     except Exception as exc:
         payload["error"] = f"{type(exc).__name__}: {exc}"
-        if rollback_archive:
+        if rollback_archive and Path(rollback_archive).suffix.lower() == ".whl":
             payload["rollback_attempted"] = True
             try:
                 rollback = [
@@ -125,6 +152,7 @@ def main() -> int:
                     "--upgrade",
                     "--no-deps",
                     "--force-reinstall",
+                    "--disable-pip-version-check",
                     rollback_archive,
                 ]
                 run_logged(rollback, log)

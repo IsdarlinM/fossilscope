@@ -2,13 +2,38 @@
 
 ## Incident evidence — 2026-08-10
 
-A real Windows FossilScope 0.5.14 run provided the decisive Web failure evidence. The native Dashboard, `/docs`, `/openapi.json` and `/workbench` assets returned HTTP 200, but `/api/v1/workbench/catalog` repeatedly returned HTTP 500. The traceback terminated in SRIC Web catalog generation with:
+Two real Windows FossilScope 0.5.14 runs now provide release-blocking evidence.
+
+### Security Workspace catalog failure
+
+The native Dashboard, `/docs`, `/openapi.json` and `/workbench` assets returned HTTP 200, but `/api/v1/workbench/catalog` repeatedly returned HTTP 500. The traceback terminated in SRIC Web catalog generation with:
 
 ```text
 TypeError: unsupported CLI parameter type in Web catalog: TyperArgument
 ```
 
 That failure explains the apparently missing operation buttons/controls: the static page loaded, but the dynamic operation catalog never reached the browser.
+
+### Windows `update --force` opened multiple CLI windows
+
+A second real 0.5.14 execution used:
+
+```text
+fossilscope update --force
+```
+
+The visible process reported a same-version official release (`current_version=0.5.14`, `available_version=0.5.14`, `same_version=true`) and staged the Windows post-exit handoff, but incorrectly emitted `forced=false`. During the handoff, multiple CLI/console windows appeared.
+
+Source inspection identified the concrete process topology behind that behavior:
+
+- the first helper process was launched with detached/no-window flags;
+- the helper subsequently executed `python -m pip` and verification subprocesses without `CREATE_NO_WINDOW`;
+- the helper received a verified source ZIP, so pip could start additional source-build/backend processes after detachment;
+- the status payload copied the check result's default `forced=false` instead of overriding it from the actual `--force` request.
+
+The 0.5.16 candidate changes this contract. Verified source snapshots are converted to metadata-verified target/rollback `.whl` files while the original visible process is still running. The post-exit helper refuses source archives, accepts only prebuilt wheels, launches direct child processes with `CREATE_NO_WINDOW`, and the helper launcher uses `CREATE_NO_WINDOW | CREATE_NEW_PROCESS_GROUP` without `DETACHED_PROCESS`. A same-version force request must report `forced=true` and `action=FORCED_REINSTALL`.
+
+This user-provided Windows behavior is real incident evidence. The 0.5.16 fix still requires actual Windows execution before the incident can be marked VALIDATED as resolved.
 
 ## Focused executed evidence
 
@@ -64,15 +89,18 @@ FossilScope 0.5.16 currently contains the following release gates and runtime co
 - unexpected shared Web SSE runtime failures become controlled terminal failed events;
 - Web operations that can write workspace/output state, including `collect`, `extract` and `report`, are conservatively `MUTATING_REVERSIBLE` and approval-gated;
 - Windows/Linux installers refuse success unless FossilScope 0.5.16 + SRIC >=0.5.16,<0.6 pass `pip check`, required module imports and complete CLI/Web catalog parity;
-- detached Windows update verification also requires the complete CLI/Web feature contract before reporting `INSTALLED`.
+- Windows update staging builds and verifies target/rollback wheels before the active executable exits;
+- the post-exit helper rejects source archives and uses hidden child-process flags;
+- same-version `--force` metadata must preserve `forced=true` and `action=FORCED_REINSTALL`;
+- detached Windows update verification requires the complete CLI/Web feature contract before reporting `INSTALLED`.
 
 ## Hosted CI status
 
 **THE COMPLETE FOSSILSCOPE 0.5.16 REPOSITORY GATES HAVE NOT EXECUTED IN HOSTED CI.**
 
-FossilScope PR #24 exact-head workflow run `31441443770` created all eight configured Linux/Windows jobs for head `82b214e72c625ddc41fe989173915e1c65671cfe`. Every job reported `runner_id=0` and `steps=[]`. No checkout, Python setup, install, pytest, static analysis, installer smoke or release-gate command executed.
+Earlier FossilScope PR #24 exact-head workflow runs created all eight configured Linux/Windows jobs but every job reported `runner_id=0` and `steps=[]`. No checkout, Python setup, install, pytest, static analysis, installer smoke or release-gate command executed. The branch has moved again for the Windows updater fix, so those older attempts are not exact-head evidence for the current candidate.
 
-The associated SRIC Core 0.5.16 workflow showed the same condition across all configured jobs. A zero-step workflow is infrastructure evidence only. It is not a code-test failure and it is not PASS evidence.
+The associated SRIC Core 0.5.16 workflow showed the same zero-runner condition. A zero-step workflow is infrastructure evidence only. It is not a code-test failure and it is not PASS evidence.
 
 The maintenance container also cannot resolve `github.com`, so it cannot independently materialize the complete FossilScope/SRIC repositories for a substitute full local run. Repository source and tests are being reviewed and modified through the authenticated GitHub connector; focused local package-level probes are distinguished explicitly from repository execution.
 
@@ -83,13 +111,14 @@ python -m pytest -q tests/e2e/test_cli_all_commands_functional.py
 python -m pytest -q tests/e2e/test_cli_web_parameter_matrix_v0516.py
 python -m pytest -q tests/e2e/test_cli_exception_boundaries_v0516.py
 python -m pytest -q tests/standalone/test_standalone_contract_v05.py
+python -m pytest -q tests/standalone/test_windows_update_handoff_v0513.py
 python -m pytest -q tests/e2e/test_security_workspace_v0514.py
 python -m pytest -q tests/e2e/test_unified_web_theme_api_docs_v0515.py tests/security/test_web_catalog_compat_v0515.py
 python -m sric.standalone_gate --root .
 python scripts/release-gate.py
 ```
 
-The full Definition of Done additionally requires successful clean Linux/Termux and transactional Windows install/repair, data-preserving update/rollback, dependency/secret/SAST/SBOM/build checks, responsive browser validation, browser-console error review and ecosystem integration against exact final commits.
+The full Definition of Done additionally requires successful clean Linux/Termux and transactional Windows install/repair, data-preserving update/rollback, dependency/secret/SAST/SBOM/build checks, responsive browser validation, browser-console error review and ecosystem integration against exact final commits. The Windows updater regression specifically requires observing a real `fossilscope update --force` with no additional console windows and a successful `update-result.json`.
 
 ## Release status
 

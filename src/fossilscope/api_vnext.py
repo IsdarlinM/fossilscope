@@ -27,10 +27,15 @@ class LifecycleRequest(BaseModel):
                 {
                     "evidence": [
                         {
-                            "value": "api.example.test/v1",
-                            "kind": "CURRENT_OBSERVATION",
+                            "evidence_id": "evidence-current-http-001",
+                            "asset_id": "asset-api-example",
+                            "kind": "CURRENT_HTTP",
+                            "source_id": "authorized-observation-001",
+                            "source_group": "direct-http-observation",
                             "observed_at": "2026-08-10T12:00:00Z",
-                            "source": "authorized observation",
+                            "direct_observation": True,
+                            "counter_evidence_ids": [],
+                            "notes": ["Current HTTP observation recorded during authorized research."],
                         }
                     ]
                 }
@@ -56,9 +61,12 @@ class ReobservationPlanRequest(BaseModel):
                     "requests": [
                         {
                             "request_id": "reobserve-001",
+                            "asset_id": "asset-api-example",
                             "target": "https://example.test/.well-known/openapi.json",
+                            "reason": "STALE_REFERENCE",
                             "mode": "PASSIVE",
-                            "reason": "stale historical API documentation",
+                            "source_evidence_ids": ["evidence-historical-001"],
+                            "priority": 70,
                         }
                     ],
                     "deduplicate": True,

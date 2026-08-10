@@ -8,6 +8,7 @@ from typing import NoReturn
 
 import typer
 from pydantic import ValidationError
+from sric.errors import safe_exception_message
 from sric.plugins import PluginRegistry
 from sric.scope import ScopeEngine, ScopePolicy
 from sric.workspace import Workspace
@@ -29,11 +30,13 @@ def _read_json(path: Path) -> object:
     try:
         return json.loads(path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as exc:
-        raise typer.BadParameter(f"cannot read valid JSON from {path}: {exc}") from exc
+        raise typer.BadParameter(
+            f"cannot read valid JSON from {path}: {safe_exception_message(exc)}"
+        ) from exc
 
 
 def _validation_error(label: str, exc: Exception) -> NoReturn:
-    typer.echo(f"{label}: {exc}", err=True)
+    typer.echo(f"{label}: {safe_exception_message(exc)}", err=True)
     raise typer.Exit(2) from exc
 
 
@@ -97,7 +100,7 @@ def collect_url(
         for observation in result.observations:
             engine.add_observation(observation)
     except (FileNotFoundError, OSError, PermissionError, ValueError, ValidationError) as exc:
-        typer.echo(f"collect-url rejected: {exc}", err=True)
+        typer.echo(f"collect-url rejected: {safe_exception_message(exc)}", err=True)
         raise typer.Exit(3) from exc
     typer.echo(json.dumps({"mode": "PASSIVE_GET_ONLY", "url": result.url, "cache_hit": result.cache_hit, "sha256": result.sha256, "size_bytes": result.size_bytes, "imported": len(result.observations), "provenance": result.provenance}, indent=2))
 
@@ -109,7 +112,7 @@ def time_travel(workspace: str, at: str = typer.Option(..., "--at"), root: Path 
         when = datetime.fromisoformat(at.replace("Z", "+00:00"))
         output = FossilIntelligence(FossilEngine(wp(workspace, root))).time_travel(when)
     except ValueError as exc:
-        typer.echo(f"time-travel input rejected: {exc}", err=True)
+        typer.echo(f"time-travel input rejected: {safe_exception_message(exc)}", err=True)
         raise typer.Exit(2) from exc
     typer.echo(json.dumps(output, indent=2, default=str))
 

@@ -1,66 +1,131 @@
-# Test Evidence — FossilScope v0.5.12 Candidate
+# Test Evidence — FossilScope v0.5.15 Candidate
 
-## Candidate review — 2026-08-10
+Date: 2026-08-10
 
-FossilScope 0.5.12 aligns the product with the shared SRIC Core 0.5.12 operational runtime and closes the runtime-contract drift that could allow an older core to be treated as compatible outside the normal installer path.
+## Candidate scope
 
-Implemented candidate controls:
+FossilScope 0.5.15 is the Web/API visual-consistency and catalog-reliability candidate built from the user-observed 0.5.14 runtime.
 
-- package metadata, runtime bootstrap, `doctor`, Linux/Termux installer, Windows installer and lock snapshot all require SRIC `>=0.5.12,<0.6`;
-- clean/repair installation pins the immutable GitHub-signature-verified SRIC main commit `4dd0ad417e55fc76fb67d582ec50234bffff2876`;
-- required shared modules include `sric.web_console`, `sric.web_workbench`, `sric.web_catalog` and `sric.web_runtime`;
-- supported stale SRIC releases advance through fixed signed snapshots one release at a time from 0.5.5 through 0.5.12;
-- same-version corrupt 0.5.12 runtimes repair from the fixed 0.5.12 signed snapshot instead of depending on a moving update channel;
-- installer-internal doctor/capability/help smokes remain banner-suppressed;
-- the exhaustive standalone contract walks every public FossilScope CLI command, all root/subcommand help forms and exact ordered CLI/Web parameter parity;
-- existing Web regressions cover Console/Workbench pages, CSS/JS assets, HTTP command/feature catalogs, coverage, runtime compatibility and native temporal API surfaces;
-- shared SRIC 0.5.12 provides redacted operational exceptions, structured catalog 503 handling, bounded child reaping, SSE-safe retired jobs and persisted Job Engine secret redaction.
+Implemented candidate controls include:
 
-## Executed focused evidence relevant to this candidate
+- one Sentinel Forge blue/graphite + teal visual contract across native Dashboard `/`, shared Security Workspace `/workbench`, legacy `/console` compatibility surface and API Reference `/docs`;
+- offline professional Segoe UI Variable/Aptos/system typography and Cascadia Code/SFMono/Consolas evidence/code typography without external font/CDN dependencies;
+- a read-only same-origin `/docs` OpenAPI renderer with search/tag filters, parameter metadata, request bodies, responses and component schemas; it contains no automatic request-execution control;
+- expanded OpenAPI summaries, descriptions, query constraints and evidence/proof boundaries for temporal, intelligence, research-runtime, analysis, capabilities and runtime-compatibility endpoints;
+- canonical SRIC Core 0.5.15 catalog hardening plus a bounded FossilScope compatibility bridge for the user-observed SRIC 0.5.14 `catalog HTTP 500` failure class during product-first update;
+- clean/repair installation pinned to GitHub-verified SRIC Core 0.5.15 merge `95e093a0b8c2041037836cec235a73fd578d815c`;
+- detached Windows update verification that builds the complete JSON-safe `fossilscope.cli_all` catalog before accepting the target product as installed;
+- transactional Windows runtime repair and data-preserving uninstall semantics retained;
+- mandatory deterministic functional smoke for all 45 public FossilScope commands;
+- every root/subcommand `--help`, `-h` and trailing `help` form retained as a separate gate;
+- dedicated E2E/security regressions for unified Web theme, OpenAPI completeness, read-only docs behavior and console/workbench catalog HTTP 200.
 
-The shared SRIC 0.5.12 runtime changes used by FossilScope were exercised in a focused local harness. The first run exposed a real background-reaper return-code race (`3 passed, 1 failed`); the race was corrected and the harness was rerun successfully:
+## Exact-head GitHub Actions attempt
+
+PR candidate head:
+
+```text
+9b6842484ad8c62d3cbc8097bd728322dc5e74c5
+```
+
+GitHub Actions run:
+
+```text
+31437374502
+```
+
+The workflow created all eight configured jobs:
+
+- installer-smoke (ubuntu-latest)
+- installer-smoke (windows-latest)
+- standalone ubuntu-latest Python 3.11 / 3.12 / 3.13
+- standalone windows-latest Python 3.11 / 3.12 / 3.13
+
+Every job completed with:
+
+```text
+runner_id = 0
+runner_name = ""
+steps = []
+```
+
+No checkout, Python setup, dependency installation, CLI command smoke, help smoke, Web/API test, security regression, installer test or release gate actually ran. GitHub records the jobs as failures because the external hosted runner/account infrastructure did not start the jobs. This is **not a FossilScope test failure and is not PASS evidence**.
+
+The exact-head workflow therefore did **not** execute:
+
+```bash
+python -m pytest -q tests/e2e/test_cli_all_commands_functional.py
+python -m pytest -q tests/standalone/test_standalone_contract_v05.py
+python -m pytest -q tests/e2e/test_security_workspace_v0514.py
+python -m pytest -q tests/e2e/test_unified_web_theme_api_docs_v0515.py tests/security/test_web_catalog_compat_v0515.py
+python -m sric.standalone_gate --root .
+python scripts/release-gate.py --quick
+```
+
+## Exact-head local execution attempt
+
+The maintenance environment retried an exact branch checkout using:
+
+```bash
+git clone --depth 1 --branch web/unify-dashboard-api-docs-0.5.15 https://github.com/IsdarlinM/fossilscope.git /tmp/fossilscope-v0515
+```
+
+The checkout failed before any repository code was available:
+
+```text
+fatal: unable to access 'https://github.com/IsdarlinM/fossilscope.git/': Could not resolve host: github.com
+```
+
+The authenticated GitHub connector can inspect and modify repository content, but it is not a Python/Windows/Linux execution runner. Static/source review through that connector is not substituted for test execution.
+
+## Shared SRIC 0.5.15 status
+
+The exact first-party core used by this candidate is the GitHub-verified merge:
+
+```text
+95e093a0b8c2041037836cec235a73fd578d815c
+```
+
+Its PR workflow likewise created hosted jobs without allocating a runner (`runner_id=0`, zero executed steps). The shared theme/catalog changes are therefore integrated source, not a claimed full release PASS.
+
+## Required evidence before declaring 0.5.15 complete/stable
+
+The exact final FossilScope commit still must execute successfully on real runners/environment:
+
+- all 45 public CLI functional command smokes;
+- every root/subcommand help form;
+- unit, integration, E2E, security and fuzz suites;
+- Dashboard `/`, Security Workspace `/workbench`, `/console` alias and API Reference `/docs` HTTP/rendering checks;
+- `/api/v1/console/catalog` and `/api/v1/workbench/catalog` HTTP 200 with non-empty catalogs;
+- API OpenAPI schema completeness plus valid/invalid input behavior;
+- responsive desktop/mobile browser checks and browser-console error review;
+- clean Linux/Termux and Windows installation;
+- Windows dependency-corruption repair and workspace/evidence preservation;
+- detached Windows update, Web-catalog verification and rollback behavior;
+- dependency/secret/SAST/SBOM/build/supply-chain checks;
+- exact-commit SRIC/FossilScope integration.
+
+A complete release run should include:
+
+```bash
+python -m pytest -q tests/e2e/test_cli_all_commands_functional.py
+python -m pytest -q tests/standalone/test_standalone_contract_v05.py
+python -m pytest -q tests/e2e/test_security_workspace_v0514.py
+python -m pytest -q tests/e2e/test_unified_web_theme_api_docs_v0515.py tests/security/test_web_catalog_compat_v0515.py
+python -m sric.standalone_gate --root .
+python scripts/release-gate.py
+```
+
+The moving official update channel must not be interpreted as validated merely because source was merged. Advancing a stable update channel should follow successful exact-commit execution evidence.
+
+---
+
+## Historical evidence retained from the 0.5.12 stabilization cycle
+
+The shared SRIC 0.5.12 runtime changes used by FossilScope were previously exercised in a focused local harness. The first run exposed a background-reaper return-code race (`3 passed, 1 failed`); after correction the focused harness reported:
 
 ```text
 4 passed in 0.19s
 ```
 
-Those four checks covered catalog-503 redaction, terminal-job/SSE retention, final-wait background reaping and Job Engine persistence redaction.
-
-This is evidence for the shared runtime paths only. It is **not** represented as a full FossilScope repository/platform/browser PASS.
-
-## FossilScope exact-commit hosted CI status
-
-**THE COMPLETE v0.5.12 FOSSILSCOPE TEST/RELEASE GATES HAVE NOT EXECUTED.**
-
-GitHub Actions creates Linux/Windows installer and standalone jobs but does not allocate a runner. Jobs report `runner_id=0` and `steps=[]`. GitHub annotates the checks with:
-
-```text
-The job was not started because your account is locked due to a billing issue.
-```
-
-A zero-step workflow is infrastructure failure, not test evidence. No full pytest, static-analysis, clean-install, browser-E2E, supply-chain or release-gate PASS is claimed from those hosted runs.
-
-The execution container available to this maintenance session also cannot resolve `github.com`, so it cannot materialize the complete repository checkout to substitute for the blocked hosted runners. Repository code, docs and test definitions were reviewed through the authenticated GitHub connector, but static review is not execution evidence.
-
-## Required exact-commit evidence before declaring the release complete
-
-```bash
-python -m sric.standalone_gate --root fossilscope
-python sric-core/scripts/release-standalone-ecosystem.py --root .
-python fossilscope/scripts/release-gate.py
-python sric-core/scripts/release-ecosystem.py --root .
-```
-
-The full Definition of Done still requires successful execution of:
-
-- all unit, integration, E2E, security and fuzz tests;
-- every public CLI command's `--help`, `-h` and trailing `help` forms plus exact CLI/Web parameter parity;
-- Web Console and Workbench pages, assets, catalogs, coverage, form/button submission, cancellation, approval and SSE behavior;
-- every documented GET/POST API route with valid and invalid inputs, including runtime-compatibility and degraded 503 behavior;
-- clean Linux/Termux and Windows install, repair, PATH and banner-suppression checks;
-- signed update/repair/rollback while preserving configuration, workspaces and evidence;
-- dependency/secret/SAST/SBOM/build checks;
-- responsive browser validation and console-error review;
-- ecosystem integration against the exact final commits.
-
-The 0.5.12 candidate may be integrated to `main` at the project owner's explicit request, but that integration must not be described as proof that the blocked release gates passed.
+Those checks covered catalog-503 redaction, terminal-job/SSE retention, final-wait background reaping and Job Engine persistence redaction. They remain historical evidence for those specific shared-runtime paths only and do not constitute 0.5.15 release evidence.

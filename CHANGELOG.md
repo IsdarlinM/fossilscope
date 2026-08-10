@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.5.15 - 2026-08-10
+- Unified the native FossilScope Dashboard and offline `/docs` API Reference with the Sentinel Forge Security Workspace graphite/slate + teal theme, including the same product rail, spacing hierarchy, Segoe UI Variable/Aptos system font stack and Cascadia Code/SFMono/Consolas evidence/code stack.
+- Removed the remaining green FossilScope Dashboard/API-docs presentation; all primary local Web surfaces now share `#0b0f14` page, `#121922` surface, `#283544` border and `#5aa9b8` accent tokens with no external font or CDN dependency.
+- Rebuilt `/docs` as a read-only same-origin OpenAPI explorer with endpoint/tag search, full descriptions, parameters, request bodies, response contracts and component schemas. Documentation intentionally exposes no automatic request-execution controls.
+- Completed OpenAPI summaries/descriptions/query constraints for temporal, intelligence, research-runtime, capabilities and runtime-compatibility endpoints and added explicit evidence/proof boundaries to all analysis/reobservation/evolution operations.
+- Closed the reported `catalog HTTP 500` failure class by adopting signed SRIC Core 0.5.15 catalog hardening for clean/repair installs and adding a bounded product compatibility bridge for already-installed SRIC 0.5.14 runtimes during product-first update.
+- Clean/repair installation now pins GitHub-verified SRIC Core 0.5.15 merge `95e093a0b8c2041037836cec235a73fd578d815c`, import-probes `sric.web_theme`, and verifies FossilScope 0.5.15 before success. Package compatibility remains `>=0.5.14,<0.6` only for the controlled update transition.
+- Added E2E regressions requiring Dashboard/API Reference theme parity, rich OpenAPI contracts, read-only docs behavior and HTTP 200 from both console/workbench catalogs; retained the mandatory functional gate for all 45 public commands and all supported help forms.
+- Added complete `docs/api/README.md`, corrected the analysis API startup guidance, expanded examples using exact runtime schema field names, and documented all Web surfaces in `docs/web-ui/README.md`.
+- GitHub Actions jobs that receive no runner and execute zero steps remain external infrastructure blockers, not test PASS or code-failure evidence.
+
 ## 0.5.14 - 2026-08-10
 - Replaced the previous green three-column shared Workbench presentation with the Sentinel Forge Security Workspace from SRIC Core 0.5.14: desktop product rail, Operations Library, dedicated Operation Workspace, separate execution evidence/output and a full-width Recent Activity surface.
 - Adopted professional offline typography (`Segoe UI Variable`/Aptos/system UI and Cascadia Code/SFMono/Consolas) plus a restrained graphite/slate + teal palette without external font/CDN dependencies.

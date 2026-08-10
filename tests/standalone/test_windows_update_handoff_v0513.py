@@ -82,7 +82,7 @@ def test_same_version_force_is_staged_until_parent_exits(tmp_path: Path, monkeyp
     assert (tmp_path / ".fossilscope" / "update-in-progress.json").is_file()
 
 
-def test_helper_waits_before_mutating_the_live_runtime() -> None:
+def test_helper_waits_before_mutating_and_verifies_runtime_plus_web_catalog() -> None:
     helper = Path(windows_update.__file__).with_name("windows_update_helper.py")
     source = helper.read_text(encoding="utf-8")
     wait_position = source.index("wait_for_parent(int(parent_pid))")
@@ -90,6 +90,8 @@ def test_helper_waits_before_mutating_the_live_runtime() -> None:
     assert wait_position < pip_position
     assert "OpenProcess.restype = ctypes.c_void_p" in source
     assert "import annotated_types, pydantic, fossilscope" in source
+    assert "build_json_safe_command_catalog('fossilscope.cli_all')" in source
+    assert "assert catalog" in source
     assert '[runtime_python, "-m", "pip", "check"]' in source
     assert "--force-reinstall" in source
 

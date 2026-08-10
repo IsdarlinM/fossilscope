@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.5.14 - 2026-08-10
+- Replaced the previous green three-column shared Workbench presentation with the Sentinel Forge Security Workspace from SRIC Core 0.5.14: desktop product rail, Operations Library, dedicated Operation Workspace, separate execution evidence/output and a full-width Recent Activity surface.
+- Adopted professional offline typography (`Segoe UI Variable`/Aptos/system UI and Cascadia Code/SFMono/Consolas) plus a restrained graphite/slate + teal palette without external font/CDN dependencies.
+- Preserved exact CLI/Web capability and parameter parity, fixed-runner `shell=False`, no user-supplied argv, Scope/Policy/rate/approval controls, CSRF protection, secret redaction and real-time jobs.
+- Raised the SRIC Core floor to `>=0.5.14,<0.6`, pinned the GitHub-verified shared-core merge `3c5d1e0eff2584d069843a5234d9d8a0357718b9`, and added the signed 0.5.13 -> 0.5.14 runtime transition.
+- Updated Linux and transactional Windows installers to import-probe `sric.web_security_workspace` and validate FossilScope/SRIC 0.5.14 before reporting success.
+- Kept the mandatory deterministic functional smoke for all 45 public FossilScope commands and added a product E2E contract for Security Workspace UI v3 and fixed-runner safety metadata.
+- Hosted zero-step CI runs are not treated as PASS; release evidence remains separate from merge status.
+
 ## 0.5.13 - 2026-08-10
 - Fixed the Windows self-update failure where `fossilscope update --force` attempted to replace the running `Scripts\fossilscope.exe`, causing `WinError 32`, a partial pip uninstall, and a secondary rollback failure on loaded native modules.
 - Official Windows updates now stage and verify the target first, hand installation to a detached helper, wait for the active FossilScope process to exit, verify the repaired runtime, and retain deterministic rollback/result logs.
@@ -80,12 +89,12 @@
 - Added standalone regression coverage for the public `--force` CLI contract while preserving the 0.5.3 Web workspace-resolution fixes.
 
 ## 0.5.3 - 2026-08-08
-- Fixed `fossilscope web WORKSPACE` raising an uncaught `FileNotFoundError` when the named workspace does not exist under the selected root.
+- Fixed `fossilscope web WORKSPACE` raising an uncaught `FileNotFoundError` when the named workspace does not exist under the selected `--root`.
 - Added centralized named-workspace validation for extended CLI commands with actionable missing-workspace errors and no Python traceback.
 - Rejects path-like workspace names, `../` traversal and workspace symlinks that could escape the selected `--root`.
 - Fixed the Web command to construct the complete `api_all` application, including vNext analysis routes and `/api/v1/capabilities`, instead of the older base API factory.
 - Removed stale API-factory monkey patching from `cli_all` that did not affect the `cli_more.web` command.
-- Added E2E regression coverage for successful Web startup wiring, missing workspaces, traversal, symlink escape and complete API routes.
+- Added E2E regression coverage for successful Web startup wiring, missing workspace, traversal, symlink escape and complete API routes.
 - Updated README/CLI documentation and runtime/package version to 0.5.3.
 
 ## 0.5.2 - 2026-08-08

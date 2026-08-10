@@ -24,9 +24,19 @@ app.rich_markup_mode = "rich"
 def branded_main(
     ctx: typer.Context,
     no_color: bool = no_color_option(),
+    version: bool = typer.Option(
+        False,
+        "--version",
+        "-V",
+        is_eager=True,
+        help="Show the FossilScope version and exit.",
+    ),
 ) -> None:
     """FossilScope CLI presentation controls."""
 
+    if version:
+        typer.echo(__version__)
+        raise typer.Exit()
     configure_cli_context(ctx, no_color=no_color)
 
 

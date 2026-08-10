@@ -17,7 +17,9 @@ def test_windows_installer_never_mutates_existing_runtime_in_place() -> None:
 def test_windows_installer_detects_the_reported_dependency_corruption() -> None:
     text = (ROOT / "scripts" / "install-windows.cmd").read_text(encoding="utf-8")
     assert "import annotated_types, pydantic, fossilscope" in text
-    assert "m.version('fossilscope') == '0.5.13'" in text
+    assert "m.version('fossilscope') == '0.5.14'" in text
+    assert "sric.web_security_workspace" in text
+    assert "(0,5,14)<=v<(0,6,0)" in text
     assert "pip check" in text
     assert "doctor --json" in text
     assert "capabilities" in text

@@ -25,6 +25,9 @@ def test_update_force_uses_official_channel_without_manifest_or_key(monkeypatch)
 
     monkeypatch.delenv("FOSSILSCOPE_RELEASE_MANIFEST_URL", raising=False)
     monkeypatch.delenv("FOSSILSCOPE_RELEASE_PUBLIC_KEY", raising=False)
+    # The Windows post-exit handoff has its own regression suite. This test isolates
+    # the shared official-channel dispatch contract without making network requests.
+    monkeypatch.setattr(cli_update, "_is_windows", lambda: False)
     monkeypatch.setattr(cli_update, "perform_product_update", fake_update)
 
     result = CliRunner().invoke(app, ["update", "--force"])

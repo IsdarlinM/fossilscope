@@ -8,13 +8,15 @@ from sric.workspace import Workspace
 
 import fossilscope.cli_more as cli_more
 from fossilscope.cli_all import app
+from fossilscope.core import FossilEngine
 
 runner = CliRunner()
 
 
 def _workspace(tmp_path: Path, name: str = "guarded") -> Path:
     root = tmp_path / "workspaces"
-    Workspace.create(root, name)
+    workspace = Workspace.create(root, name)
+    FossilEngine(workspace.root)
     return root
 
 

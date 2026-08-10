@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.5.11 - 2026-08-09
+- Fixed the unstyled `/console`/`/workbench` rendering by allowing same-origin shared stylesheets in the native FossilScope CSP while retaining restrictive object/base/frame policies.
+- Adopted SRIC Core 0.5.11 JSON-safe command catalog generation so non-primitive Typer metadata cannot surface as the reported `catalog HTTP 500` failure.
+- Pinned and locked the exact signed SRIC Core 0.5.11 merge used by clean and repair installation.
+- Kept normal Linux/Termux/Windows installs idempotent and free of `--force-reinstall`; installer-internal doctor/capability/help smokes now suppress repeated banners and print their captured diagnostics only on failure.
+- Added regressions for Console CSS/JS, HTTP-200 command catalog, Workbench catalog/coverage and the complete installer contract.
+
 ## 0.5.10 - 2026-08-09
 - Hardened repair installation so an obsolete, incomplete or broken Python environment rebuilds only `~/.fossilscope/venv`; workspaces, configuration and evidence are never removed.
 - Termux now prefers a writable `$PREFIX/bin` already present in `PATH`, making the `fossilscope` command immediately reachable after install.

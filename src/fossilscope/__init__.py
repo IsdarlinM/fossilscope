@@ -1,5 +1,7 @@
 """FossilScope temporal security archaeology."""
 
+# Load the bounded Web-theme compatibility bridge before Web modules are imported.
+from . import web_theme as _web_theme  # noqa: F401
 from .evolution import ArtifactKind, EvolutionDelta, StaleReferenceCandidate, VersionedArtifactObservation, diff_artifact_versions, find_stale_references
 from .lifecycle import EvidenceKind, ExposureLifecycle, LifecycleAssessment, SurfaceEvidence, assess_lifecycle
 from .planning import CurrentExposureState, ReobservationCandidate, plan_reobservation
@@ -13,4 +15,4 @@ __all__ = [
     "diff_artifact_versions", "evaluate_reobservation", "find_stale_references", "plan_reobservation",
     "schedule_retry",
 ]
-__version__ = "0.5.14"
+__version__ = "0.5.15"

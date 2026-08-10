@@ -1,47 +1,48 @@
-# Test Evidence — FossilScope v0.5.3
+# Test Evidence — FossilScope v0.5.12 Candidate
 
-## Focused regression review — 2026-08-08
+## Candidate review — 2026-08-10
 
-FossilScope 0.5.3 addresses the observed `fossilscope web imr` failure in which a missing or invalid named workspace reached `FossilEngine` and surfaced `FileNotFoundError: workspace.json not found` as a Python traceback.
+FossilScope 0.5.12 aligns the product with the shared SRIC Core 0.5.12 operational runtime and closes the runtime-contract drift that could allow an older core to be treated as compatible outside the normal installer path.
 
-Implemented regression controls:
+Implemented candidate controls:
 
-- named workspaces are resolved below the selected workspace root before Web/API construction;
-- `Workspace.open()` validates and migrates an existing workspace before use;
-- missing workspaces return an actionable CLI error, list available valid workspaces when possible, and do not auto-create data;
-- path-like names, traversal (`../`) and workspace symlinks are rejected to prevent escape from the selected `--root`;
-- `fossilscope web` now constructs the complete `api_all` application, including vNext analysis and capability routes;
-- the stale `cli_all` API-factory monkey patch was removed;
-- E2E regression tests cover valid Web startup wiring, missing workspaces, traversal, symlink escape, and complete API route registration.
+- package metadata, runtime bootstrap, `doctor`, Linux/Termux installer, Windows installer and lock snapshot all require SRIC `>=0.5.12,<0.6`;
+- clean/repair installation pins the immutable GitHub-signature-verified SRIC main commit `4dd0ad417e55fc76fb67d582ec50234bffff2876`;
+- required shared modules include `sric.web_console`, `sric.web_workbench`, `sric.web_catalog` and `sric.web_runtime`;
+- supported stale SRIC releases advance through fixed signed snapshots one release at a time from 0.5.5 through 0.5.12;
+- same-version corrupt 0.5.12 runtimes repair from the fixed 0.5.12 signed snapshot instead of depending on a moving update channel;
+- installer-internal doctor/capability/help smokes remain banner-suppressed;
+- the exhaustive standalone contract walks every public FossilScope CLI command, all root/subcommand help forms and exact ordered CLI/Web parameter parity;
+- existing Web regressions cover Console/Workbench pages, CSS/JS assets, HTTP command/feature catalogs, coverage, runtime compatibility and native temporal API surfaces;
+- shared SRIC 0.5.12 provides redacted operational exceptions, structured catalog 503 handling, bounded child reaping, SSE-safe retired jobs and persisted Job Engine secret redaction.
 
-## Executed focused evidence
+## Executed focused evidence relevant to this candidate
 
-A focused local workspace-resolution test executed successfully for the new resolution policy:
+The shared SRIC 0.5.12 runtime changes used by FossilScope were exercised in a focused local harness. The first run exposed a real background-reaper return-code race (`3 passed, 1 failed`); the race was corrected and the harness was rerun successfully:
 
 ```text
-focused_workspace_resolution=PASS
+4 passed in 0.19s
 ```
 
-The exercised cases were:
+Those four checks covered catalog-503 redaction, terminal-job/SSE retention, final-wait background reaping and Job Engine persistence redaction.
 
-- direct workspace `imr` below the selected root resolves successfully;
-- `../outside` and `..` are rejected as invalid workspace names;
-- a missing workspace is classified as missing rather than producing a raw filesystem traceback;
-- a workspace symlink is rejected when symlink creation is supported by the platform.
+This is evidence for the shared runtime paths only. It is **not** represented as a full FossilScope repository/platform/browser PASS.
 
-The shared CLI presentation logic was also previously exercised locally for the 0.5.2 release train, including canonical banner ordering and global `--no-color` normalization. The 0.5.3 branding regression now derives the expected banner version from the installed package version instead of hard-coding 0.5.2.
+## FossilScope exact-commit hosted CI status
 
-## GitHub Actions status
+**THE COMPLETE v0.5.12 FOSSILSCOPE TEST/RELEASE GATES HAVE NOT EXECUTED.**
 
-**THE COMPLETE v0.5.3 TEST/RELEASE GATES HAVE NOT EXECUTED SUCCESSFULLY.**
+GitHub Actions creates Linux/Windows installer and standalone jobs but does not allocate a runner. Jobs report `runner_id=0` and `steps=[]`. GitHub annotates the checks with:
 
-GitHub Actions currently creates workflow jobs but does not provision a runner. Representative jobs report `runner_id=0`, an empty runner name, and `steps=[]`. Therefore no checkout, pytest, installer smoke, static analysis, build, audit, or wheel validation from those runs is counted as execution evidence.
+```text
+The job was not started because your account is locked due to a billing issue.
+```
 
-This is classified as CI infrastructure/provisioning failure, not a test PASS and not a code-test failure.
+A zero-step workflow is infrastructure failure, not test evidence. No full pytest, static-analysis, clean-install, browser-E2E, supply-chain or release-gate PASS is claimed from those hosted runs.
 
-## Required complete release evidence
+The execution container available to this maintenance session also cannot resolve `github.com`, so it cannot materialize the complete repository checkout to substitute for the blocked hosted runners. Repository code, docs and test definitions were reviewed through the authenticated GitHub connector, but static review is not execution evidence.
 
-When runners are available, execute the exact-commit gates:
+## Required exact-commit evidence before declaring the release complete
 
 ```bash
 python -m sric.standalone_gate --root fossilscope
@@ -50,4 +51,16 @@ python fossilscope/scripts/release-gate.py
 python sric-core/scripts/release-ecosystem.py --root .
 ```
 
-The full Definition of Done still requires those gates, clean install/update checks, CLI/help checks, Web/browser checks, security tests, supply-chain checks, and evidence tied to the exact source commit. Focused PASS evidence above validates the targeted regression only; it is not a substitute for the complete release gate.
+The full Definition of Done still requires successful execution of:
+
+- all unit, integration, E2E, security and fuzz tests;
+- every public CLI command's `--help`, `-h` and trailing `help` forms plus exact CLI/Web parameter parity;
+- Web Console and Workbench pages, assets, catalogs, coverage, form/button submission, cancellation, approval and SSE behavior;
+- every documented GET/POST API route with valid and invalid inputs, including runtime-compatibility and degraded 503 behavior;
+- clean Linux/Termux and Windows install, repair, PATH and banner-suppression checks;
+- signed update/repair/rollback while preserving configuration, workspaces and evidence;
+- dependency/secret/SAST/SBOM/build checks;
+- responsive browser validation and console-error review;
+- ecosystem integration against the exact final commits.
+
+The 0.5.12 candidate may be integrated to `main` at the project owner's explicit request, but that integration must not be described as proof that the blocked release gates passed.

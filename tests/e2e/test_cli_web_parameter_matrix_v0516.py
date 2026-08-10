@@ -4,13 +4,16 @@ from pathlib import Path
 from typing import Any
 
 import click
+import pytest
 from fastapi.testclient import TestClient
 from typer.main import get_command
 from typer.testing import CliRunner
 
+import sric.web_console as web_console_module
 from fossilscope.api_all import create_app
 from fossilscope.cli_all import app
 from sric.web_catalog import build_json_safe_command_catalog, install_json_safe_catalog
+from sric.web_console import ConsoleRunRequest, WebConsoleConfig, WebConsoleManager
 from sric.web_guardrails import SUPPORTED_WEB_CONTROLS
 from sric.web_workbench import build_feature_catalog, feature_contract
 
@@ -160,6 +163,70 @@ def test_every_command_with_required_parameters_fails_missing_input_cleanly() ->
             path,
             type(result.exception).__name__,
         )
+
+
+def test_every_web_operation_passes_fixed_transport_and_approval_gate_without_side_effects(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    install_json_safe_catalog()
+    started: list[tuple[str, tuple[str, ...]]] = []
+
+    class FakeThread:
+        def __init__(self, *, target: Any, args: tuple[Any, ...], daemon: bool, name: str) -> None:
+            assert daemon is True
+            self.target = target
+            self.args = args
+            self.name = name
+
+        def start(self) -> None:
+            job_id, argv = self.args
+            started.append((str(job_id), tuple(str(item) for item in argv)))
+
+    monkeypatch.setattr(web_console_module.threading, "Thread", FakeThread)
+    manager = WebConsoleManager(
+        WebConsoleConfig(
+            product="fossilscope",
+            display_name="FossilScope",
+            cli_module="fossilscope.cli_all",
+            version="0.5.16",
+        )
+    )
+    catalog = manager.catalog()
+    assert len(catalog) == 45
+
+    submitted: set[str] = set()
+    context_only: set[str] = set()
+    for meta in catalog:
+        path = str(meta["path"])
+        if meta["context_only"]:
+            with pytest.raises(RuntimeError, match="context-only"):
+                manager.submit(ConsoleRunRequest(command=path, approved=True))
+            context_only.add(path)
+            continue
+
+        if meta["approval_required"]:
+            with pytest.raises(PermissionError, match="approval"):
+                manager.submit(ConsoleRunRequest(command=path, approved=False))
+
+        phrase = f"APPROVE {path}" if meta["approval_phrase_required"] else None
+        job = manager.submit(
+            ConsoleRunRequest(
+                command=path,
+                args=[],
+                approved=bool(meta["approval_required"]),
+                approval_phrase=phrase,
+            )
+        )
+        assert job.command == path
+        assert job.classification == meta["classification"]
+        assert job.approval_required == meta["approval_required"]
+        submitted.add(path)
+
+    assert submitted | context_only == {str(item["path"]) for item in catalog}
+    assert len(started) == len(submitted)
+    for _job_id, argv in started:
+        assert argv
+        assert argv[0] in submitted
 
 
 def test_workbench_exposes_complete_operation_library_and_recovery_controls(tmp_path: Path) -> None:

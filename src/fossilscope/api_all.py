@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 from sric.capabilities import discover_capabilities
 
@@ -26,13 +26,43 @@ def _mount_degraded_workbench(app: FastAPI, reason: str) -> None:
     @app.get("/api/v1/workbench/coverage", include_in_schema=False)
     async def workbench_coverage_unavailable() -> JSONResponse:
         return JSONResponse(
-            {"complete": False, "status": "RUNTIME_INCOMPATIBLE", "reason": reason, "repair": "fossilscope update or rerun installer"},
+            {
+                "complete": False,
+                "status": "RUNTIME_INCOMPATIBLE",
+                "reason": reason,
+                "repair": "fossilscope update or rerun installer",
+            },
             status_code=503,
         )
 
 
 def create_app(workspace: Path) -> FastAPI:
     app = create_base_app(workspace)
+
+    @app.exception_handler(ValueError)
+    async def invalid_value(_request: Request, exc: ValueError) -> JSONResponse:
+        return JSONResponse(
+            status_code=422,
+            content={
+                "error": {
+                    "code": "INVALID_INPUT",
+                    "message": str(exc),
+                }
+            },
+        )
+
+    @app.exception_handler(KeyError)
+    async def missing_research_entity(_request: Request, exc: KeyError) -> JSONResponse:
+        raw = exc.args[0] if exc.args else "requested research entity"
+        return JSONResponse(
+            status_code=404,
+            content={
+                "error": {
+                    "code": "NOT_FOUND",
+                    "message": f"No matching research entity was found: {raw}",
+                }
+            },
+        )
 
     @app.get("/api/v1/capabilities", tags=["standalone"])
     async def capabilities() -> dict[str, object]:
@@ -41,7 +71,12 @@ def create_app(workspace: Path) -> FastAPI:
     @app.get("/api/v1/runtime-compatibility", tags=["standalone"])
     async def runtime_compatibility() -> dict[str, object]:
         runtime = sric_runtime_status()
-        return {"compatible": runtime.compatible, "sric_version": runtime.version, "missing_modules": list(runtime.missing_modules), "reasons": list(runtime.reasons)}
+        return {
+            "compatible": runtime.compatible,
+            "sric_version": runtime.version,
+            "missing_modules": list(runtime.missing_modules),
+            "reasons": list(runtime.reasons),
+        }
 
     try:
         from sric.web_catalog import install_json_safe_catalog
@@ -49,15 +84,26 @@ def create_app(workspace: Path) -> FastAPI:
 
         install_json_safe_catalog()
     except ModuleNotFoundError as exc:
-        _mount_degraded_workbench(app, f"missing shared Web console/catalog module: {exc.name or exc}")
+        _mount_degraded_workbench(
+            app,
+            f"missing shared Web console/catalog module: {exc.name or exc}",
+        )
         return app
 
-    config = WebConsoleConfig(product="fossilscope", display_name="FossilScope", cli_module="fossilscope.cli_all", version=__version__)
+    config = WebConsoleConfig(
+        product="fossilscope",
+        display_name="FossilScope",
+        cli_module="fossilscope.cli_all",
+        version=__version__,
+    )
     manager = mount_web_console(app, config)
     try:
         from sric.web_workbench import mount_feature_workbench
     except ModuleNotFoundError as exc:
-        _mount_degraded_workbench(app, f"missing shared Workbench module: {exc.name or exc}")
+        _mount_degraded_workbench(
+            app,
+            f"missing shared Workbench module: {exc.name or exc}",
+        )
     else:
         mount_feature_workbench(app, config, manager)
     return app

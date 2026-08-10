@@ -27,7 +27,8 @@ if defined SRIC_CORE_SOURCE (
 )
 "%VENV%\Scripts\python.exe" -m pip check || exit /b 3
 "%VENV%\Scripts\python.exe" -c "import importlib.metadata as m; import sric.web_console, sric.web_workbench, sric.web_catalog, sric.web_runtime; v=tuple(int(x) for x in m.version('sric-core').split('.')[:3]); raise SystemExit(0 if (0,5,13)<=v<(0,6,0) else 1)" || (echo SRIC Core runtime integrity check failed. Required ^>=0.5.13,^<0.6.& exit /b 3)
->"%BIN_DIR%\%CMD%.cmd" echo @"%VENV%\Scripts\%CMD%.exe" %%*
+if not exist "%SCRIPT_DIR%fossilscope-wrapper.cmd" (echo Missing scripts\fossilscope-wrapper.cmd.& exit /b 3)
+copy /y "%SCRIPT_DIR%fossilscope-wrapper.cmd" "%BIN_DIR%\%CMD%.cmd" >nul || exit /b 3
 "%VENV%\Scripts\python.exe" -m sric.install_path "%BIN_DIR%" || exit /b 3
 set "SENTINEL_BANNER=never"
 set "CHECK_LOG=%INSTALL_ROOT%\install-check.log"
@@ -38,6 +39,7 @@ set "CHECK_LOG=%INSTALL_ROOT%\install-check.log"
 "%VENV%\Scripts\%CMD%.exe" -h >>"%CHECK_LOG%" 2>&1 || goto :validation_failed
 "%VENV%\Scripts\%CMD%.exe" help >>"%CHECK_LOG%" 2>&1 || goto :validation_failed
 del /q "%CHECK_LOG%" >nul 2>&1
+del /q "%INSTALL_ROOT%\update-in-progress.json" >nul 2>&1
 echo %PROJECT% installed/repaired successfully in standalone mode.
 exit /b 0
 

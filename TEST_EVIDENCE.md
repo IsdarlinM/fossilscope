@@ -68,11 +68,11 @@ FossilScope 0.5.16 currently contains the following release gates and runtime co
 
 ## Hosted CI status
 
-**THE COMPLETE FOSSILSCOPE 0.5.16 REPOSITORY GATES HAVE NOT YET EXECUTED IN HOSTED CI.**
+**THE COMPLETE FOSSILSCOPE 0.5.16 REPOSITORY GATES HAVE NOT EXECUTED IN HOSTED CI.**
 
-The associated SRIC Core 0.5.16 exact-head workflow created all configured jobs but GitHub assigned no runner: jobs reported `runner_id=0` and `steps=[]`. No checkout, installation, pytest, static analysis, installer smoke or release-gate step executed.
+FossilScope PR #24 exact-head workflow run `31441443770` created all eight configured Linux/Windows jobs for head `82b214e72c625ddc41fe989173915e1c65671cfe`. Every job reported `runner_id=0` and `steps=[]`. No checkout, Python setup, install, pytest, static analysis, installer smoke or release-gate command executed.
 
-Previous FossilScope exact-head workflows on this account show the same external runner/account blocker. A zero-step workflow is infrastructure evidence only. It is not a code-test failure and it is not PASS evidence.
+The associated SRIC Core 0.5.16 workflow showed the same condition across all configured jobs. A zero-step workflow is infrastructure evidence only. It is not a code-test failure and it is not PASS evidence.
 
 The maintenance container also cannot resolve `github.com`, so it cannot independently materialize the complete FossilScope/SRIC repositories for a substitute full local run. Repository source and tests are being reviewed and modified through the authenticated GitHub connector; focused local package-level probes are distinguished explicitly from repository execution.
 

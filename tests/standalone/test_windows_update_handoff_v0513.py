@@ -93,7 +93,7 @@ def test_helper_waits_before_mutating_the_live_runtime() -> None:
 
 
 def test_cli_routes_official_windows_update_to_handoff(monkeypatch) -> None:
-    monkeypatch.setattr(cli_update.os, "name", "nt")
+    monkeypatch.setattr(cli_update, "_is_windows", lambda: True)
     monkeypatch.setattr(cli_update, "ensure_for_official_update", lambda: None)
     monkeypatch.setattr(
         cli_update,

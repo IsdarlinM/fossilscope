@@ -11,10 +11,11 @@
 - Conservatively approval-gated Web operations that can write workspace/output state, including `collect`, `extract` and `report`, as `MUTATING_REVERSIBLE`; fixed `shell=False`, CSRF, redaction, Scope/Policy/rate/approval and no-free-form-argv guarantees remain unchanged.
 - Clean/repair installers now pin GitHub-signature-verified SRIC Core 0.5.16 merge `b1436b4690d3560fdc84878fce5bda8f6a418b91`, require FossilScope 0.5.16, import-probe the shared Web guardrails, and refuse success unless the full CLI catalog, Web feature catalog and feature-contract parity build successfully.
 - Detached Windows update verification now also requires a complete Web feature contract before writing `INSTALLED`; an update that installs package files but leaves the Security Workspace unusable follows failure/rollback behavior.
+- Fixed the Windows 0.5.14 `update --force` behavior that could open multiple console windows during the post-exit pip/build handoff. Official source snapshots are now built into metadata-verified target/rollback wheels before the visible process exits; the hidden helper accepts only prebuilt wheels, runs child processes with `CREATE_NO_WINDOW`, avoids the conflicting `DETACHED_PROCESS` combination, and reports same-version force operations as `forced=true` with `action=FORCED_REINSTALL`.
 - Hosted GitHub jobs that receive no runner and execute zero steps remain infrastructure blockers rather than PASS evidence or code-test failures.
 
 ## 0.5.15 - 2026-08-10
-- Unified the native FossilScope Dashboard and offline `/docs` API Reference with the Sentinel Forge Security Workspace graphite/slate + teal theme, including the same product rail, spacing hierarchy, Segoe UI Variable/Aptos system font stack and Cascadia Code/SFMono/Consolas evidence/code stack.
+- Unified the native FossilScope Dashboard and offline `/docs` API Reference with the Sentinel Forge Security Workspace graphite/slate + teal theme, including the same product rail, spacing hierarchy, Segoe UI Variable/Aptos/system font stack and Cascadia Code/SFMono/Consolas evidence/code stack.
 - Removed the remaining green FossilScope Dashboard/API-docs presentation; all primary local Web surfaces now share `#0b0f14` page, `#121922` surface, `#283544` border and `#5aa9b8` accent tokens with no external font or CDN dependency.
 - Rebuilt `/docs` as a read-only same-origin OpenAPI explorer with endpoint/tag search, full descriptions, parameters, request bodies, response contracts and component schemas. Documentation intentionally exposes no automatic request-execution controls.
 - Completed OpenAPI summaries/descriptions/query constraints for temporal, intelligence, research-runtime, capabilities and runtime-compatibility endpoints and added explicit evidence/proof boundaries to all analysis/reobservation/evolution operations.
@@ -26,7 +27,7 @@
 
 ## 0.5.14 - 2026-08-10
 - Replaced the previous green three-column shared Workbench presentation with the Sentinel Forge Security Workspace from SRIC Core 0.5.14: desktop product rail, Operations Library, dedicated Operation Workspace, separate execution evidence/output and a full-width Recent Activity surface.
-- Adopted professional offline typography (`Segoe UI Variable`/Aptos/system UI and Cascadia Code/SFMono/Consolas) plus a restrained graphite/slate + teal palette without external font/CDN dependencies.
+- Adopted professional offline typography (`Segoe UI Variable`/Aptos/system UI and Cascadia Code/SFMono/Consolas) plus a restrained graphite/slate and teal palette without external font/CDN dependencies.
 - Preserved exact CLI/Web capability and parameter parity, fixed-runner `shell=False`, no user-supplied argv, Scope/Policy/rate/approval controls, CSRF protection, secret redaction and real-time jobs.
 - Raised the SRIC Core floor to `>=0.5.14,<0.6`, pinned the GitHub-verified shared-core merge `3c5d1e0eff2584d069843a5234d9d8a0357718b9`, and added the signed 0.5.13 -> 0.5.14 runtime transition.
 - Updated Linux and transactional Windows installers to import-probe `sric.web_security_workspace` and validate FossilScope/SRIC 0.5.14 before reporting success.
@@ -86,7 +87,7 @@
 ## 0.5.7 - 2026-08-09
 - Added the full Web Feature Workbench at `/workbench`, generated from `fossilscope.cli_all`, with structured responsive controls for every public CLI command and argument.
 - Fixed the native dashboard discoverability gap shown on mobile: the root page now exposes visible Dashboard / All Features / Advanced Console navigation and a full-feature callout.
-- Preserved passive-first semantics, named-workspace safety, scope/terms acknowledgement and active-action policy/approval gates.
+- Preserved passive-first semantics, named-workspace safety, scope/terms acknowledgement and active HTTPS safety gates.
 - Updated SRIC Core floor, runtime lock and exact first-party pin to the signed SRIC 0.5.6 Workbench release.
 - Added exhaustive CLI help/argument-to-Web parity tests and native temporal API smoke coverage.
 
@@ -94,7 +95,7 @@
 - Made the official FossilScope updater zero-config: `fossilscope update`, `fossilscope update --check`, and `fossilscope update --force` no longer require user-supplied manifest/key configuration.
 - Delegated official update trust and immutable GitHub signed-commit validation to SRIC Core 0.5.5 while preserving same-version force reinstall and downgrade rejection.
 - Kept `--manifest` plus `--public-key` as an explicit advanced custom/private-channel override.
-- Updated the SRIC Core runtime floor, lock, and exact first-party pin to the signed SRIC 0.5.5 release commit without changing workspace resolution or passive-first analysis behavior.
+- Updated the SRIC Core runtime floor, lock, and exact first-party pin to the signed SRIC Core 0.5.5 release commit without changing workspace resolution or passive-first analysis behavior.
 - Added standalone regression coverage proving `fossilscope update --force` selects the official channel with no manifest/key.
 
 ## 0.5.5 - 2026-08-08

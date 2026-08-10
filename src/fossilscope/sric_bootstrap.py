@@ -194,14 +194,17 @@ def ensure_for_official_update() -> SRICRuntimeStatus:
         if repaired.version is not None:
             working_version = repaired.version
 
-    updater = _updater()
-    _require_updater_api(updater, "perform_product_update")
-    updater.perform_product_update(
-        expected_product="sric-core",
-        current_version=working_version,
-        check_only=False,
-        force=True,
-    )
+    if working_version == SRIC_MIN_FULL:
+        _bridge_release(current_version=working_version, target_version=working_version)
+    else:
+        updater = _updater()
+        _require_updater_api(updater, "perform_product_update")
+        updater.perform_product_update(
+            expected_product="sric-core",
+            current_version=working_version,
+            check_only=False,
+            force=True,
+        )
     importlib.invalidate_caches()
     repaired = status()
     if not repaired.compatible:

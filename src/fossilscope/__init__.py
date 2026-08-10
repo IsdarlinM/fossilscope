@@ -1,8 +1,8 @@
 """FossilScope temporal security archaeology."""
 
 # Load bounded compatibility bridges before shared Web modules are imported. Clean
-# 0.5.15 installs use the canonical SRIC implementations; these shims only keep an
-# existing 0.5.14 runtime repairable during the product-first update transition.
+# 0.5.16 installs use the canonical SRIC implementations; these shims only keep an
+# older 0.5.x runtime repairable during the product-first update transition.
 from . import web_theme as _web_theme  # noqa: F401
 from .web_catalog_compat import install as _install_web_catalog_compat
 
@@ -21,4 +21,4 @@ __all__ = [
     "diff_artifact_versions", "evaluate_reobservation", "find_stale_references", "plan_reobservation",
     "schedule_retry",
 ]
-__version__ = "0.5.15"
+__version__ = "0.5.16"

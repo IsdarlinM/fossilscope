@@ -9,6 +9,7 @@ from . import cli_planning as _cli_planning  # noqa: F401
 from .cli_vnext import app
 from . import cli_capabilities as _cli_capabilities  # noqa: F401
 from . import cli_update as _cli_update  # noqa: F401,E402
+from .cli_guardrails import install_cli_callback_guardrails
 
 __all__ = ["BRAND", "app", "normalize_help_argv", "run"]
 
@@ -18,6 +19,10 @@ BRAND = CLIBrand(
     version=__version__,
 )
 app.rich_markup_mode = "rich"
+
+# Apply the callback boundary only after every module has registered its commands so both
+# terminal invocation and the Web fixed runner use the same contained command tree.
+install_cli_callback_guardrails(app)
 
 
 @app.callback()

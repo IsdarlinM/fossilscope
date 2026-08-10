@@ -56,11 +56,16 @@ def verify(runtime_python: str, expected_version: str, log_path: Path) -> None:
     probe = (
         "import importlib.metadata as m; "
         "assert m.version('fossilscope') == " + repr(expected_version) + "; "
-        "import annotated_types, pydantic, fossilscope; "
-        "from sric.web_catalog import build_json_safe_command_catalog; "
+        "import annotated_types, pydantic, fossilscope, sric.web_guardrails; "
+        "from sric.web_catalog import build_json_safe_command_catalog, install_json_safe_catalog; "
+        "install_json_safe_catalog(); "
+        "from sric.web_workbench import build_feature_catalog, feature_contract; "
         "catalog=build_json_safe_command_catalog('fossilscope.cli_all'); "
-        "assert catalog and any(item.get('path') == 'doctor' for item in catalog); "
-        "print(m.version('fossilscope'), len(catalog))"
+        "features=build_feature_catalog('fossilscope.cli_all'); "
+        "contract=feature_contract('fossilscope.cli_all'); "
+        "assert catalog and len(catalog)==len(features) and contract.get('complete') is True; "
+        "assert any(item.get('path') == 'doctor' for item in catalog); "
+        "print(m.version('fossilscope'), m.version('sric-core'), len(catalog))"
     )
     run_logged([runtime_python, "-c", probe], log_path)
     run_logged([runtime_python, "-m", "pip", "check"], log_path)

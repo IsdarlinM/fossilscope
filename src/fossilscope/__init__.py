@@ -1,7 +1,13 @@
 """FossilScope temporal security archaeology."""
 
-# Load the bounded Web-theme compatibility bridge before Web modules are imported.
+# Load bounded compatibility bridges before shared Web modules are imported. Clean
+# 0.5.15 installs use the canonical SRIC implementations; these shims only keep an
+# existing 0.5.14 runtime repairable during the product-first update transition.
 from . import web_theme as _web_theme  # noqa: F401
+from .web_catalog_compat import install as _install_web_catalog_compat
+
+_install_web_catalog_compat()
+
 from .evolution import ArtifactKind, EvolutionDelta, StaleReferenceCandidate, VersionedArtifactObservation, diff_artifact_versions, find_stale_references
 from .lifecycle import EvidenceKind, ExposureLifecycle, LifecycleAssessment, SurfaceEvidence, assess_lifecycle
 from .planning import CurrentExposureState, ReobservationCandidate, plan_reobservation

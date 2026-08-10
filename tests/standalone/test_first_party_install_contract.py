@@ -1,7 +1,7 @@
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-SRIC_SHA = "95e093a0b8c2041037836cec235a73fd578d815c"
+SRIC_SHA = "b1436b4690d3560fdc84878fce5bda8f6a418b91"
 
 
 def test_first_party_manifest_pins_exact_sric_commit() -> None:
@@ -26,7 +26,12 @@ def test_installers_resolve_product_and_first_party_atomically() -> None:
         assert "sric.web_catalog" in text
         assert "sric.web_runtime" in text
         assert "sric.web_theme" in text
-        assert "0.5.15" in text
+        assert "sric.web_guardrails" in text
+        assert "0.5.16" in text
+        assert "build_json_safe_command_catalog" in text
+        assert "build_feature_catalog" in text
+        assert "feature_contract" in text
+        assert 'contract.get("complete") is True' in text or "contract.get('complete') is True" in text
         assert "setuptools wheel" in text
         assert "SENTINEL_BANNER=never" in text
         assert "install-check.log" in text
@@ -52,4 +57,4 @@ def test_runtime_repair_path_and_python_contract() -> None:
 
 def test_runtime_lock_matches_sric_patch() -> None:
     text = (ROOT / "requirements" / "runtime-py311.lock").read_text(encoding="utf-8")
-    assert "sric-core==0.5.15" in text
+    assert "sric-core==0.5.16" in text

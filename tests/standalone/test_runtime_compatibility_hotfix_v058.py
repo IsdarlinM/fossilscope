@@ -8,6 +8,7 @@ from typer.testing import CliRunner
 import fossilscope.sric_bootstrap as bootstrap
 from fossilscope.api_all import _mount_degraded_workbench
 from fossilscope.cli_all import app, normalize_help_argv
+from sric.web_catalog import install_json_safe_catalog
 from sric.web_console import build_command_catalog
 from sric.web_workbench import build_feature_catalog, feature_contract
 
@@ -17,16 +18,23 @@ def _runtime(version: str, *, compatible: bool, missing: tuple[str, ...] = ()) -
 
 
 def test_stale_sric_without_current_web_runtime_is_rejected_before_web_import(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(bootstrap.importlib.metadata, "version", lambda _name: "0.5.12")
+    monkeypatch.setattr(bootstrap.importlib.metadata, "version", lambda _name: "0.5.15")
     monkeypatch.setattr(
         bootstrap,
         "_find_module",
-        lambda name: name in {"sric.web_console", "sric.web_workbench", "sric.web_catalog"},
+        lambda name: name in {
+            "sric.web_console",
+            "sric.web_workbench",
+            "sric.web_security_workspace",
+            "sric.web_catalog",
+            "sric.web_runtime",
+            "sric.web_theme",
+        },
     )
     result = bootstrap.status()
     assert result.compatible is False
-    assert result.missing_modules == ("sric.web_security_workspace", "sric.web_runtime")
-    assert any("older than required 0.5.14" in reason for reason in result.reasons)
+    assert result.missing_modules == ("sric.web_guardrails",)
+    assert any("older than required 0.5.16" in reason for reason in result.reasons)
 
 
 def test_bridge_chain_advances_every_supported_historical_release_to_current_floor(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -36,7 +44,7 @@ def test_bridge_chain_advances_every_supported_historical_release_to_current_flo
         "_bridge_release",
         lambda *, current_version, target_version: transitions.append((current_version, target_version)),
     )
-    assert bootstrap._bridge_to_current_floor("0.5.5") == "0.5.14"
+    assert bootstrap._bridge_to_current_floor("0.5.5") == "0.5.16"
     assert transitions == [
         ("0.5.5", "0.5.6"),
         ("0.5.6", "0.5.7"),
@@ -47,14 +55,16 @@ def test_bridge_chain_advances_every_supported_historical_release_to_current_flo
         ("0.5.11", "0.5.12"),
         ("0.5.12", "0.5.13"),
         ("0.5.13", "0.5.14"),
+        ("0.5.14", "0.5.15"),
+        ("0.5.15", "0.5.16"),
     ]
 
 
 def test_same_version_missing_runtime_forces_fixed_signed_snapshot_repair(monkeypatch: pytest.MonkeyPatch) -> None:
     states = iter(
         [
-            _runtime("0.5.14", compatible=False, missing=("sric.web_security_workspace",)),
-            _runtime("0.5.14", compatible=True),
+            _runtime("0.5.16", compatible=False, missing=("sric.web_guardrails",)),
+            _runtime("0.5.16", compatible=True),
         ]
     )
     repairs: list[tuple[str, str]] = []
@@ -66,7 +76,7 @@ def test_same_version_missing_runtime_forces_fixed_signed_snapshot_repair(monkey
     )
     monkeypatch.setattr(bootstrap.importlib, "invalidate_caches", lambda: None)
     assert bootstrap.ensure_for_official_update().compatible is True
-    assert repairs == [("0.5.14", "0.5.14")]
+    assert repairs == [("0.5.16", "0.5.16")]
 
 
 def test_degraded_workbench_reports_503_instead_of_killing_cli() -> None:
@@ -80,6 +90,7 @@ def test_degraded_workbench_reports_503_instead_of_killing_cli() -> None:
 
 
 def test_every_fossilscope_command_and_argument_is_web_represented_and_all_help_forms() -> None:
+    install_json_safe_catalog()
     cli = build_command_catalog("fossilscope.cli_all")
     web = build_feature_catalog("fossilscope.cli_all")
     assert feature_contract("fossilscope.cli_all")["complete"] is True

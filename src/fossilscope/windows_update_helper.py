@@ -37,6 +37,15 @@ def wait_for_parent(pid: int, timeout_ms: int = 300000) -> None:
         kernel32.CloseHandle(handle)
 
 
+def _hidden_creationflags(platform_name: str | None = None) -> int:
+    """Return flags that keep helper child processes out of visible consoles."""
+
+    platform_value = os.name if platform_name is None else platform_name
+    if platform_value != "nt":
+        return 0
+    return getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000)
+
+
 def run_logged(command: list[str], log_path: Path) -> None:
     with log_path.open("a", encoding="utf-8", errors="replace") as log:
         log.write("$ " + subprocess.list2cmdline(command) + "\n")
@@ -48,7 +57,14 @@ def run_logged(command: list[str], log_path: Path) -> None:
             stdout=log,
             stderr=subprocess.STDOUT,
             shell=False,
-            env={**os.environ, "SENTINEL_BANNER": "never", "NO_COLOR": "1"},
+            env={
+                **os.environ,
+                "SENTINEL_BANNER": "never",
+                "NO_COLOR": "1",
+                "PIP_DISABLE_PIP_VERSION_CHECK": "1",
+                "PYTHONUNBUFFERED": "1",
+            },
+            creationflags=_hidden_creationflags(),
         )
 
 
@@ -56,14 +72,37 @@ def verify(runtime_python: str, expected_version: str, log_path: Path) -> None:
     probe = (
         "import importlib.metadata as m; "
         "assert m.version('fossilscope') == " + repr(expected_version) + "; "
-        "import annotated_types, pydantic, fossilscope; "
-        "from sric.web_catalog import build_json_safe_command_catalog; "
+        "import annotated_types, pydantic, fossilscope, sric.web_guardrails; "
+        "from sric.web_catalog import build_json_safe_command_catalog, install_json_safe_catalog; "
+        "install_json_safe_catalog(); "
+        "from sric.web_workbench import build_feature_catalog, feature_contract; "
         "catalog=build_json_safe_command_catalog('fossilscope.cli_all'); "
-        "assert catalog and any(item.get('path') == 'doctor' for item in catalog); "
-        "print(m.version('fossilscope'), len(catalog))"
+        "features=build_feature_catalog('fossilscope.cli_all'); "
+        "contract=feature_contract('fossilscope.cli_all'); "
+        "assert catalog and len(catalog)==len(features) and contract.get('complete') is True; "
+        "assert any(item.get('path') == 'doctor' for item in catalog); "
+        "print(m.version('fossilscope'), m.version('sric-core'), len(catalog))"
     )
     run_logged([runtime_python, "-c", probe], log_path)
     run_logged([runtime_python, "-m", "pip", "check"], log_path)
+
+
+def _require_prebuilt_wheel(path: str, *, label: str) -> None:
+    artifact = Path(path)
+    if artifact.suffix.lower() != ".whl" or not artifact.is_file():
+        raise RuntimeError(
+            f"{label} artifact must be a prebuilt wheel; refusing detached source builds"
+        )
+
+
+def _lock_evidence(lock: Path) -> tuple[bool, str]:
+    try:
+        raw = json.loads(lock.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError, TypeError):
+        return False, "UNKNOWN"
+    forced = bool(raw.get("forced", False)) if isinstance(raw, dict) else False
+    action = str(raw.get("action", "UNKNOWN")) if isinstance(raw, dict) else "UNKNOWN"
+    return forced, action
 
 
 def main() -> int:
@@ -84,14 +123,19 @@ def main() -> int:
     result = Path(result_path)
     log = Path(log_path)
     staging = Path(staging_root)
+    forced, action = _lock_evidence(lock)
     payload: dict[str, object] = {
         "product": "fossilscope",
         "target_version": target_version,
+        "forced": forced,
+        "action": action,
         "status": "FAILED",
         "rollback_attempted": False,
         "rollback_succeeded": False,
     }
     try:
+        _require_prebuilt_wheel(target_archive, label="target")
+        _require_prebuilt_wheel(rollback_archive, label="rollback")
         wait_for_parent(int(parent_pid))
         install = [
             runtime_python,
@@ -101,6 +145,7 @@ def main() -> int:
             "--upgrade",
             "--no-deps",
             "--force-reinstall",
+            "--disable-pip-version-check",
             target_archive,
         ]
         run_logged(install, log)
@@ -109,7 +154,7 @@ def main() -> int:
         payload["installed"] = True
     except Exception as exc:
         payload["error"] = f"{type(exc).__name__}: {exc}"
-        if rollback_archive:
+        if rollback_archive and Path(rollback_archive).suffix.lower() == ".whl":
             payload["rollback_attempted"] = True
             try:
                 rollback = [
@@ -120,6 +165,7 @@ def main() -> int:
                     "--upgrade",
                     "--no-deps",
                     "--force-reinstall",
+                    "--disable-pip-version-check",
                     rollback_archive,
                 ]
                 run_logged(rollback, log)

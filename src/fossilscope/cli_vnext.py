@@ -4,8 +4,11 @@ import json
 import sys
 from datetime import datetime
 from pathlib import Path
+from typing import NoReturn
 
 import typer
+from pydantic import ValidationError
+from sric.errors import safe_exception_message
 from sric.plugins import PluginRegistry
 from sric.scope import ScopeEngine, ScopePolicy
 from sric.workspace import Workspace
@@ -27,7 +30,14 @@ def _read_json(path: Path) -> object:
     try:
         return json.loads(path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as exc:
-        raise typer.BadParameter(f"cannot read valid JSON from {path}: {exc}") from exc
+        raise typer.BadParameter(
+            f"cannot read valid JSON from {path}: {safe_exception_message(exc)}"
+        ) from exc
+
+
+def _validation_error(label: str, exc: Exception) -> NoReturn:
+    typer.echo(f"{label}: {safe_exception_message(exc)}", err=True)
+    raise typer.Exit(2) from exc
 
 
 @app.command("doctor")
@@ -36,14 +46,17 @@ def doctor_vnext(
     plugin_path: Path = typer.Option(root_default() / "plugins", "--plugin-path"),
 ) -> None:
     """Check Python, exact SRIC feature compatibility, plugins and privacy."""
-    plugins = PluginRegistry(plugin_path).list()
+    try:
+        plugins = PluginRegistry(plugin_path).list()
+    except (OSError, ValueError, ValidationError) as exc:
+        _validation_error("plugin registry check failed", exc)
     runtime = sric_runtime_status()
     checks = {
         "python": {"ok": sys.version_info >= (3, 11), "version": sys.version.split()[0]},
         "sric": {
             "ok": runtime.compatible,
             "version": runtime.version,
-            "required": ">=0.5.14,<0.6",
+            "required": ">=0.5.16,<0.6",
             "missing_modules": list(runtime.missing_modules),
             "reasons": list(runtime.reasons),
         },
@@ -75,16 +88,20 @@ def collect_url(
         typer.echo("collect-url requires at least one --allow target; no request was sent", err=True)
         raise typer.Exit(3)
     workspace_path = wp(workspace, root)
-    Workspace.open(workspace_path)
-    runtime = PassiveHTTPSCollectorRuntime(workspace_path / "fossilscope" / "collector-cache", ScopeEngine(ScopePolicy(allow_targets=allow, allowed_methods={"GET"})), ttl_seconds=cache_ttl)
     try:
+        Workspace.open(workspace_path)
+        runtime = PassiveHTTPSCollectorRuntime(
+            workspace_path / "fossilscope" / "collector-cache",
+            ScopeEngine(ScopePolicy(allow_targets=allow, allowed_methods={"GET"})),
+            ttl_seconds=cache_ttl,
+        )
         result = runtime.collect(url, adapter, ack_terms=ack_terms)
-    except (PermissionError, ValueError) as exc:
-        typer.echo(str(exc), err=True)
+        engine = FossilEngine(workspace_path)
+        for observation in result.observations:
+            engine.add_observation(observation)
+    except (FileNotFoundError, OSError, PermissionError, ValueError, ValidationError) as exc:
+        typer.echo(f"collect-url rejected: {safe_exception_message(exc)}", err=True)
         raise typer.Exit(3) from exc
-    engine = FossilEngine(workspace_path)
-    for observation in result.observations:
-        engine.add_observation(observation)
     typer.echo(json.dumps({"mode": "PASSIVE_GET_ONLY", "url": result.url, "cache_hit": result.cache_hit, "sha256": result.sha256, "size_bytes": result.size_bytes, "imported": len(result.observations), "provenance": result.provenance}, indent=2))
 
 
@@ -93,10 +110,10 @@ def time_travel(workspace: str, at: str = typer.Option(..., "--at"), root: Path 
     """Reconstruct the temporal graph at an ISO-8601 instant."""
     try:
         when = datetime.fromisoformat(at.replace("Z", "+00:00"))
+        output = FossilIntelligence(FossilEngine(wp(workspace, root))).time_travel(when)
     except ValueError as exc:
-        typer.echo("--at must be ISO-8601", err=True)
+        typer.echo(f"time-travel input rejected: {safe_exception_message(exc)}", err=True)
         raise typer.Exit(2) from exc
-    output = FossilIntelligence(FossilEngine(wp(workspace, root))).time_travel(when)
     typer.echo(json.dumps(output, indent=2, default=str))
 
 
@@ -124,7 +141,10 @@ def mobile_archaeology(workspace: str, old_artifact: Path, new_artifact: Path, r
     if not old_artifact.is_file() or not new_artifact.is_file():
         typer.echo("Both artifacts must be regular files", err=True)
         raise typer.Exit(2)
-    output = FossilIntelligence(FossilEngine(wp(workspace, root))).mobile_api_archaeology(old_artifact, new_artifact)
+    try:
+        output = FossilIntelligence(FossilEngine(wp(workspace, root))).mobile_api_archaeology(old_artifact, new_artifact)
+    except (OSError, ValueError) as exc:
+        _validation_error("mobile archaeology failed", exc)
     typer.echo(json.dumps(output, indent=2, default=str))
 
 
@@ -134,8 +154,11 @@ def lifecycle_assess(path: Path) -> None:
     raw = _read_json(path)
     if not isinstance(raw, list):
         raise typer.BadParameter("surface evidence JSON must be a list")
-    evidence = [SurfaceEvidence.model_validate(item) for item in raw]
-    output = assess_lifecycle(evidence)
+    try:
+        evidence = [SurfaceEvidence.model_validate(item) for item in raw]
+        output = assess_lifecycle(evidence)
+    except (ValidationError, TypeError, ValueError) as exc:
+        _validation_error("invalid lifecycle evidence", exc)
     typer.echo(json.dumps([item.model_dump(mode="json") for item in output], indent=2, default=str))
 
 
@@ -145,10 +168,13 @@ def reobserve_plan(path: Path, deduplicate: bool = typer.Option(True, "--dedupli
     raw = _read_json(path)
     if not isinstance(raw, list):
         raise typer.BadParameter("reobservation requests JSON must be a list")
-    requests = [ReobservationRequest.model_validate(item) for item in raw]
-    if deduplicate:
-        requests = deduplicate_requests(requests)
-    output = [evaluate_reobservation(item) for item in requests]
+    try:
+        requests = [ReobservationRequest.model_validate(item) for item in raw]
+        if deduplicate:
+            requests = deduplicate_requests(requests)
+        output = [evaluate_reobservation(item) for item in requests]
+    except (ValidationError, TypeError, ValueError) as exc:
+        _validation_error("invalid reobservation request", exc)
     typer.echo(json.dumps([item.model_dump(mode="json") for item in output], indent=2, default=str))
     if any(not item.executable for item in output):
         raise typer.Exit(2)
@@ -160,8 +186,15 @@ def reobserve_retry(path: Path, base_delay_seconds: int = typer.Option(60, "--ba
     raw = _read_json(path)
     if not isinstance(raw, dict):
         raise typer.BadParameter("reobservation request JSON must be an object")
-    request = ReobservationRequest.model_validate(raw)
-    updated = schedule_retry(request, base_delay_seconds=base_delay_seconds, maximum_delay_seconds=maximum_delay_seconds)
+    try:
+        request = ReobservationRequest.model_validate(raw)
+        updated = schedule_retry(
+            request,
+            base_delay_seconds=base_delay_seconds,
+            maximum_delay_seconds=maximum_delay_seconds,
+        )
+    except (ValidationError, TypeError, ValueError) as exc:
+        _validation_error("invalid reobservation retry request", exc)
     typer.echo(updated.model_dump_json(indent=2))
 
 

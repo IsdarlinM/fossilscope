@@ -9,7 +9,7 @@ permissions:
   contents: read
 
 env:
-  SRIC_CORE_CI_REF: 95e093a0b8c2041037836cec235a73fd578d815c
+  SRIC_CORE_CI_REF: b1436b4690d3560fdc84878fce5bda8f6a418b91
 
 jobs:
   standalone:
@@ -36,8 +36,14 @@ jobs:
       - run: python -m pip install pytest ruff mypy build pip-audit hypothesis httpx
       - name: Every public CLI command functional smoke
         run: python -m pytest -q tests/e2e/test_cli_all_commands_functional.py
+      - name: Every CLI/Web parameter and controlled parser error
+        run: python -m pytest -q tests/e2e/test_cli_web_parameter_matrix_v0516.py
+      - name: CLI callback exception boundaries
+        run: python -m pytest -q tests/e2e/test_cli_exception_boundaries_v0516.py
       - name: All supported CLI help forms
         run: python -m pytest -q tests/standalone/test_standalone_contract_v05.py
+      - name: Silent Windows update handoff regression
+        run: python -m pytest -q tests/standalone/test_windows_update_handoff_v0513.py tests/standalone/test_windows_update_smoke_script_v0516.py
       - name: Shared Security Workspace contract
         run: python -m pytest -q tests/e2e/test_security_workspace_v0514.py
       - name: Unified Dashboard, API Reference and catalog incident regression
@@ -73,10 +79,11 @@ jobs:
           "$TEST_HOME/.fossilscope/venv/bin/fossilscope" version
           "$TEST_HOME/.fossilscope/venv/bin/fossilscope" doctor --json
           "$TEST_HOME/.fossilscope/venv/bin/fossilscope" capabilities
+          "$TEST_HOME/.fossilscope/venv/bin/python" -c 'from sric.web_catalog import install_json_safe_catalog; install_json_safe_catalog(); from sric.web_workbench import feature_contract; assert feature_contract("fossilscope.cli_all")["complete"] is True'
           "$TEST_HOME/.fossilscope/venv/bin/fossilscope" init preserve
           HOME="$TEST_HOME" sh scripts/uninstall-linux.sh
           test -f "$TEST_HOME/.fossilscope/workspaces/preserve/workspace.json"
-      - name: Windows corruption, repair, uninstall, and data-preservation smoke
+      - name: Windows corruption, repair, Web catalog, uninstall, and data-preservation smoke
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
@@ -96,11 +103,14 @@ jobs:
           cmd /c scripts\repair-windows.cmd
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           $exe = "$env:USERPROFILE\.fossilscope\venv\Scripts\fossilscope.exe"
+          $python = "$env:USERPROFILE\.fossilscope\venv\Scripts\python.exe"
           & $exe version
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           & $exe doctor --json
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           & $exe capabilities
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          & $python -c "from sric.web_catalog import install_json_safe_catalog; install_json_safe_catalog(); from sric.web_workbench import feature_contract; assert feature_contract('fossilscope.cli_all')['complete'] is True"
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           if (-not (Test-Path "$env:USERPROFILE\.fossilscope\workspaces\preserve\workspace.json")) {
             throw 'Workspace was not preserved across runtime repair.'

@@ -4,6 +4,7 @@ import json
 import sys
 from datetime import datetime
 from pathlib import Path
+from typing import NoReturn
 
 import typer
 from pydantic import ValidationError
@@ -31,7 +32,7 @@ def _read_json(path: Path) -> object:
         raise typer.BadParameter(f"cannot read valid JSON from {path}: {exc}") from exc
 
 
-def _validation_error(label: str, exc: Exception) -> None:
+def _validation_error(label: str, exc: Exception) -> NoReturn:
     typer.echo(f"{label}: {exc}", err=True)
     raise typer.Exit(2) from exc
 

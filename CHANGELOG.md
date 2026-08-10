@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.5.12 - 2026-08-10
+- Updated FossilScope to the signed SRIC Core 0.5.12 main revision and raised the runtime floor to `>=0.5.12,<0.6` across package metadata, bootstrap, `doctor` and installers.
+- Added the shared SRIC 0.5.12 operational exception boundary, structured redacted catalog 503 behavior, bounded process reaping, SSE-safe terminal-job retention and Job Engine secret redaction without duplicating shared runtime logic in FossilScope.
+- Linux/Termux and Windows installers now import-probe `sric.web_runtime` in addition to Console/Workbench/catalog modules and keep internal validation banners suppressed.
+- Updated runtime compatibility regressions so SRIC 0.5.11 is treated as stale for the 0.5.12 train while same-version missing-module repair remains explicit.
+- Preserved passive-first collection, scope/terms acknowledgement, deterministic evidence states and the existing Web/CLI parity contract.
+
 ## 0.5.11 - 2026-08-09
 - Fixed the unstyled `/console`/`/workbench` rendering by allowing same-origin shared stylesheets in the native FossilScope CSP while retaining restrictive object/base/frame policies.
 - Adopted SRIC Core 0.5.11 JSON-safe command catalog generation so non-primitive Typer metadata cannot surface as the reported `catalog HTTP 500` failure.

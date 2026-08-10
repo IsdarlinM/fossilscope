@@ -13,4 +13,4 @@ __all__ = [
     "diff_artifact_versions", "evaluate_reobservation", "find_stale_references", "plan_reobservation",
     "schedule_retry",
 ]
-__version__ = "0.5.13"
+__version__ = "0.5.14"

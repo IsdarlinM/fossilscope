@@ -15,145 +15,6 @@ from sric import updater as sric_updater
 
 PRODUCT = "fossilscope"
 
-HELPER_SOURCE = r"""from __future__ import annotations
-
-import ctypes
-import json
-import os
-import shutil
-import subprocess
-import sys
-import time
-from pathlib import Path
-
-
-def wait_for_parent(pid: int, timeout_ms: int = 300000) -> None:
-    SYNCHRONIZE = 0x00100000
-    WAIT_OBJECT_0 = 0x00000000
-    WAIT_TIMEOUT = 0x00000102
-    kernel32 = ctypes.windll.kernel32
-    handle = kernel32.OpenProcess(SYNCHRONIZE, False, pid)
-    if not handle:
-        time.sleep(1.0)
-        return
-    try:
-        result = kernel32.WaitForSingleObject(handle, timeout_ms)
-        if result == WAIT_TIMEOUT:
-            raise RuntimeError("timed out waiting for the active FossilScope process to exit")
-        if result != WAIT_OBJECT_0:
-            raise RuntimeError(f"unexpected Windows wait result: {result}")
-    finally:
-        kernel32.CloseHandle(handle)
-
-
-def run_logged(command: list[str], log_path: Path) -> None:
-    with log_path.open("a", encoding="utf-8", errors="replace") as log:
-        log.write("$ " + subprocess.list2cmdline(command) + "\n")
-        log.flush()
-        subprocess.run(
-            command,
-            check=True,
-            stdin=subprocess.DEVNULL,
-            stdout=log,
-            stderr=subprocess.STDOUT,
-            shell=False,
-            env={**os.environ, "SENTINEL_BANNER": "never", "NO_COLOR": "1"},
-        )
-
-
-def verify(runtime_python: str, expected_version: str, log_path: Path) -> None:
-    probe = (
-        "import importlib.metadata as m; "
-        "assert m.version('fossilscope') == " + repr(expected_version) + "; "
-        "import annotated_types, pydantic, fossilscope; "
-        "print(m.version('fossilscope'))"
-    )
-    run_logged([runtime_python, "-c", probe], log_path)
-    run_logged([runtime_python, "-m", "pip", "check"], log_path)
-
-
-def main() -> int:
-    (
-        _script,
-        parent_pid,
-        runtime_python,
-        target_archive,
-        rollback_archive,
-        target_version,
-        rollback_version,
-        lock_path,
-        result_path,
-        log_path,
-        staging_root,
-    ) = sys.argv
-    lock = Path(lock_path)
-    result = Path(result_path)
-    log = Path(log_path)
-    staging = Path(staging_root)
-    payload: dict[str, object] = {
-        "product": "fossilscope",
-        "target_version": target_version,
-        "status": "FAILED",
-        "rollback_attempted": False,
-        "rollback_succeeded": False,
-    }
-    try:
-        wait_for_parent(int(parent_pid))
-        install = [
-            runtime_python,
-            "-m",
-            "pip",
-            "install",
-            "--upgrade",
-            "--no-deps",
-            "--force-reinstall",
-            target_archive,
-        ]
-        run_logged(install, log)
-        verify(runtime_python, target_version, log)
-        payload["status"] = "INSTALLED"
-        payload["installed"] = True
-    except Exception as exc:
-        payload["error"] = f"{type(exc).__name__}: {exc}"
-        if rollback_archive:
-            payload["rollback_attempted"] = True
-            try:
-                rollback = [
-                    runtime_python,
-                    "-m",
-                    "pip",
-                    "install",
-                    "--upgrade",
-                    "--no-deps",
-                    "--force-reinstall",
-                    rollback_archive,
-                ]
-                run_logged(rollback, log)
-                verify(runtime_python, rollback_version, log)
-                payload["rollback_succeeded"] = True
-                payload["status"] = "ROLLED_BACK"
-            except Exception as rollback_exc:
-                payload["rollback_error"] = (
-                    f"{type(rollback_exc).__name__}: {rollback_exc}"
-                )
-                payload["status"] = "ROLLBACK_FAILED"
-    finally:
-        result.parent.mkdir(parents=True, exist_ok=True)
-        result.write_text(json.dumps(payload, indent=2), encoding="utf-8")
-        try:
-            lock.unlink(missing_ok=True)
-        finally:
-            try:
-                shutil.rmtree(staging)
-            except OSError:
-                pass
-    return 0 if payload["status"] == "INSTALLED" else 6
-
-
-if __name__ == "__main__":
-    raise SystemExit(main())
-"""
-
 
 def _wrapper_text() -> str:
     return r"""@echo off
@@ -251,8 +112,11 @@ def stage_official_windows_update(
                 / f"rollback-{PRODUCT}-{channel.rollback_version}.zip",
             )
 
+        helper_source = Path(__file__).with_name("windows_update_helper.py")
+        if not helper_source.is_file():
+            raise RuntimeError("Windows update helper is missing from the FossilScope package")
         helper = staging / "apply_windows_update.py"
-        helper.write_text(HELPER_SOURCE, encoding="utf-8")
+        shutil.copy2(helper_source, helper)
 
         root.mkdir(parents=True, exist_ok=True)
         bin_dir.mkdir(parents=True, exist_ok=True)

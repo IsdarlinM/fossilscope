@@ -17,7 +17,7 @@ def _runtime(version: str, *, compatible: bool, missing: tuple[str, ...] = ()) -
 
 
 def test_stale_sric_without_current_web_runtime_is_rejected_before_web_import(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(bootstrap.importlib.metadata, "version", lambda _name: "0.5.11")
+    monkeypatch.setattr(bootstrap.importlib.metadata, "version", lambda _name: "0.5.12")
     monkeypatch.setattr(
         bootstrap,
         "_find_module",
@@ -26,7 +26,7 @@ def test_stale_sric_without_current_web_runtime_is_rejected_before_web_import(mo
     result = bootstrap.status()
     assert result.compatible is False
     assert result.missing_modules == ("sric.web_runtime",)
-    assert any("older than required 0.5.12" in reason for reason in result.reasons)
+    assert any("older than required 0.5.13" in reason for reason in result.reasons)
 
 
 def test_bridge_chain_advances_every_supported_historical_release_to_current_floor(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -36,7 +36,7 @@ def test_bridge_chain_advances_every_supported_historical_release_to_current_flo
         "_bridge_release",
         lambda *, current_version, target_version: transitions.append((current_version, target_version)),
     )
-    assert bootstrap._bridge_to_current_floor("0.5.5") == "0.5.12"
+    assert bootstrap._bridge_to_current_floor("0.5.5") == "0.5.13"
     assert transitions == [
         ("0.5.5", "0.5.6"),
         ("0.5.6", "0.5.7"),
@@ -45,14 +45,15 @@ def test_bridge_chain_advances_every_supported_historical_release_to_current_flo
         ("0.5.9", "0.5.10"),
         ("0.5.10", "0.5.11"),
         ("0.5.11", "0.5.12"),
+        ("0.5.12", "0.5.13"),
     ]
 
 
 def test_same_version_missing_runtime_forces_fixed_signed_snapshot_repair(monkeypatch: pytest.MonkeyPatch) -> None:
     states = iter(
         [
-            _runtime("0.5.12", compatible=False, missing=("sric.web_runtime",)),
-            _runtime("0.5.12", compatible=True),
+            _runtime("0.5.13", compatible=False, missing=("sric.web_runtime",)),
+            _runtime("0.5.13", compatible=True),
         ]
     )
     repairs: list[tuple[str, str]] = []
@@ -64,7 +65,7 @@ def test_same_version_missing_runtime_forces_fixed_signed_snapshot_repair(monkey
     )
     monkeypatch.setattr(bootstrap.importlib, "invalidate_caches", lambda: None)
     assert bootstrap.ensure_for_official_update().compatible is True
-    assert repairs == [("0.5.12", "0.5.12")]
+    assert repairs == [("0.5.13", "0.5.13")]
 
 
 def test_degraded_workbench_reports_503_instead_of_killing_cli() -> None:

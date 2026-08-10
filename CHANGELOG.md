@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.5.13 - 2026-08-10
+- Fixed the Windows self-update failure where `fossilscope update --force` attempted to replace the running `Scripts\fossilscope.exe`, causing `WinError 32`, a partial pip uninstall, and a secondary rollback failure on loaded native modules.
+- Official Windows updates now stage and verify the target first, hand installation to a detached helper, wait for the active FossilScope process to exit, verify the repaired runtime, and retain deterministic rollback/result logs.
+- Hardened Windows installation/repair so an existing runtime is moved to `venv.rollback` before a fresh canonical venv is created. Failed installation or validation restores the previous runtime when available without deleting workspaces, configuration, evidence, or reports.
+- Added `scripts\repair-windows.cmd` for explicit recovery when a corrupted runtime cannot import FossilScope far enough to execute `fossilscope update`.
+- Added an exact regression for the reported missing `annotated_types` failure: Windows CI deliberately removes `annotated-types`, requires the CLI to fail, repairs the runtime, and verifies `version`, `doctor --json`, `capabilities`, workspace preservation, and rollback cleanup.
+- Added a mandatory deterministic functional smoke for all 45 current public CLI commands. The test compares the real Typer command tree against the smoke matrix, so a new public command cannot be introduced without functional coverage; all existing `--help`, `-h`, and trailing `help` coverage remains required.
+- Replaced private-token/same-branch SRIC CI coupling with the exact public SRIC Core 0.5.13 commit and corrected `doctor` to report the canonical `>=0.5.13,<0.6` compatibility range.
+- Hosted GitHub Actions for this stabilization work remained externally blocked before runner execution (`steps=[]`, `runner_id=0`); that infrastructure failure is not represented as a test PASS or a product-code failure.
+
 ## 0.5.12 - 2026-08-10
 - Updated FossilScope to the signed SRIC Core 0.5.12 main revision and raised the runtime floor to `>=0.5.12,<0.6` across package metadata, bootstrap, `doctor` and installers.
 - Added the shared SRIC 0.5.12 operational exception boundary, structured redacted catalog 503 behavior, bounded process reaping, SSE-safe terminal-job retention and Job Engine secret redaction without duplicating shared runtime logic in FossilScope.

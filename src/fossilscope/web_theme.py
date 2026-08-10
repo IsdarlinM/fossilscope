@@ -7,6 +7,9 @@ FossilScope 0.5.14 installation can update the product before its shared runtime
 repaired/upgraded; clean 0.5.15 installs resolve the SRIC-owned constant.
 """
 
+import sys
+from types import ModuleType
+
 try:
     from sric.web_theme import SENTINEL_THEME_TOKENS_CSS as SENTINEL_THEME_TOKENS_CSS
 except ModuleNotFoundError:
@@ -50,3 +53,11 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
   outline: 2px solid var(--accent-strong); outline-offset: 2px;
 }
 '''.strip()
+
+    # The 0.5.14 product updater installs product archives with --no-deps. Register a
+    # bounded compatibility module so the newly installed FossilScope can start and
+    # repair SRIC without crashing on this 0.5.15-only import. This does not override
+    # an installed canonical SRIC 0.5.15 module.
+    compatibility = ModuleType("sric.web_theme")
+    compatibility.SENTINEL_THEME_TOKENS_CSS = SENTINEL_THEME_TOKENS_CSS
+    sys.modules.setdefault("sric.web_theme", compatibility)

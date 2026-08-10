@@ -9,7 +9,7 @@ permissions:
   contents: read
 
 env:
-  SRIC_CORE_CI_REF: 3c5d1e0eff2584d069843a5234d9d8a0357718b9
+  SRIC_CORE_CI_REF: 95e093a0b8c2041037836cec235a73fd578d815c
 
 jobs:
   standalone:
@@ -36,8 +36,12 @@ jobs:
       - run: python -m pip install pytest ruff mypy build pip-audit hypothesis httpx
       - name: Every public CLI command functional smoke
         run: python -m pytest -q tests/e2e/test_cli_all_commands_functional.py
+      - name: All supported CLI help forms
+        run: python -m pytest -q tests/standalone/test_standalone_contract_v05.py
       - name: Shared Security Workspace contract
         run: python -m pytest -q tests/e2e/test_security_workspace_v0514.py
+      - name: Unified Dashboard, API Reference and catalog incident regression
+        run: python -m pytest -q tests/e2e/test_unified_web_theme_api_docs_v0515.py tests/security/test_web_catalog_compat_v0515.py
       - run: python -m sric.standalone_gate --root .
       - run: python scripts/release-gate.py --quick
 
@@ -66,6 +70,9 @@ jobs:
           TEST_HOME="${RUNNER_TEMP}/fossilscope-home"
           mkdir -p "$TEST_HOME"
           HOME="$TEST_HOME" sh scripts/install-linux.sh
+          "$TEST_HOME/.fossilscope/venv/bin/fossilscope" version
+          "$TEST_HOME/.fossilscope/venv/bin/fossilscope" doctor --json
+          "$TEST_HOME/.fossilscope/venv/bin/fossilscope" capabilities
           "$TEST_HOME/.fossilscope/venv/bin/fossilscope" init preserve
           HOME="$TEST_HOME" sh scripts/uninstall-linux.sh
           test -f "$TEST_HOME/.fossilscope/workspaces/preserve/workspace.json"

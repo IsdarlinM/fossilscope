@@ -17,10 +17,10 @@ BRAND = CLIBrand(
     description="Map historical attack surface and separate history from current exposure.",
     version=__version__,
 )
-app.rich_markup_mode = "rich"
+app.rich_markup_mode = None
 
 
-@app.callback()
+@app.callback(invoke_without_command=True)
 def branded_main(
     ctx: typer.Context,
     no_color: bool = no_color_option(),
@@ -43,7 +43,7 @@ def branded_main(
 def normalize_help_argv(argv: list[str]) -> list[str]:
     """Normalize trailing `help` for root and nested FossilScope commands."""
     normalized = list(argv)
-    if len(normalized) >= 3 and normalized[-1] == "help" and normalized[1] != "help":
+    if len(normalized) >= 3 and normalized[-1] == "help":
         normalized[-1] = "--help"
     return normalized
 

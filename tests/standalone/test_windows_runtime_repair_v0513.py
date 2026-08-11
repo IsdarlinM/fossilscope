@@ -20,7 +20,7 @@ def test_windows_installer_detects_the_reported_dependency_corruption() -> None:
     assert "m.version('fossilscope') == '0.5.15'" in text
     assert "sric.web_security_workspace" in text
     assert "sric.web_theme" in text
-    assert "(0,5,15)<=v<(0,6,0)" in text
+    assert "(0,5,16)<=v<(0,6,0)" in text
     assert "pip check" in text
     assert "doctor --json" in text
     assert "capabilities" in text

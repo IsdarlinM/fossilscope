@@ -1,11 +1,11 @@
-from __future__ import annotations
-
 """FossilScope bridge to the shared Sentinel Forge Web theme.
 
 SRIC Core 0.5.15 owns the canonical tokens. The fallback exists only so an existing
 FossilScope 0.5.14 installation can update the product before its shared runtime is
 repaired/upgraded; clean 0.5.15 installs resolve the SRIC-owned constant.
 """
+
+from __future__ import annotations
 
 import sys
 from types import ModuleType
@@ -59,5 +59,5 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
     # repair SRIC without crashing on this 0.5.15-only import. This does not override
     # an installed canonical SRIC 0.5.15 module.
     compatibility = ModuleType("sric.web_theme")
-    compatibility.SENTINEL_THEME_TOKENS_CSS = SENTINEL_THEME_TOKENS_CSS
+    setattr(compatibility, "SENTINEL_THEME_TOKENS_CSS", SENTINEL_THEME_TOKENS_CSS)
     sys.modules.setdefault("sric.web_theme", compatibility)

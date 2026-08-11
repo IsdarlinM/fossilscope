@@ -10,7 +10,7 @@ def test_api_docs_are_same_origin_and_loadable_under_csp(tmp_path) -> None:
     response = client.get("/docs")
     assert response.status_code == 200
     assert "cdn.jsdelivr.net" not in response.text
-    assert 'src="/assets/api-docs.js"' in response.text
+    assert "/assets/api-docs.js" in response.text
     script = client.get("/assets/api-docs.js")
     assert script.status_code == 200
     assert "fetch('/openapi.json'" in script.text

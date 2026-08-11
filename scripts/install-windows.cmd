@@ -39,7 +39,7 @@ if defined SRIC_CORE_SOURCE (
   "%VENV%\Scripts\python.exe" -m pip install --upgrade -c "%CONSTRAINTS%" -r "%FIRST_PARTY%" "%REPO_ROOT%" || goto :restore_runtime
 )
 "%VENV%\Scripts\python.exe" -m pip check || goto :restore_runtime
-"%VENV%\Scripts\python.exe" -c "import annotated_types, pydantic, fossilscope; import importlib.metadata as m; assert m.version('fossilscope') == '0.5.15'; import sric.web_console, sric.web_workbench, sric.web_security_workspace, sric.web_catalog, sric.web_runtime, sric.web_theme; v=tuple(int(x) for x in m.version('sric-core').split('.')[:3]); raise SystemExit(0 if (0,5,15)<=v<(0,6,0) else 1)" || (echo FossilScope/SRIC runtime integrity check failed. Required fossilscope==0.5.15 and sric-core ^>=0.5.15,^<0.6.& goto :restore_runtime)
+"%VENV%\Scripts\python.exe" -c "import annotated_types, pydantic, fossilscope; import importlib.metadata as m; assert m.version('fossilscope') == '0.5.15'; import sric.web_console, sric.web_workbench, sric.web_security_workspace, sric.web_catalog, sric.web_runtime, sric.web_theme; v=tuple(int(x) for x in m.version('sric-core').split('.')[:3]); raise SystemExit(0 if (0,5,16)<=v<(0,6,0) else 1)" || (echo FossilScope/SRIC runtime integrity check failed. Required fossilscope==0.5.15 and sric-core ^>=0.5.16,^<0.6.& goto :restore_runtime)
 if not exist "%SCRIPT_DIR%fossilscope-wrapper.cmd" (echo Missing scripts\fossilscope-wrapper.cmd.& goto :restore_runtime)
 copy /y "%SCRIPT_DIR%fossilscope-wrapper.cmd" "%BIN_DIR%\%CMD%.cmd" >nul || goto :restore_runtime
 "%VENV%\Scripts\python.exe" -m sric.install_path "%BIN_DIR%" || goto :restore_runtime

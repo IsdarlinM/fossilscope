@@ -50,7 +50,7 @@ def test_workbench_contract_and_dashboard_navigation(tmp_path) -> None:
     client = TestClient(create_app(tmp_path))
     dashboard = client.get("/")
     assert dashboard.status_code == 200
-    assert "Security Console" in dashboard.text
+    assert "Security Workspace" in dashboard.text
     assert "href='/workbench'" in dashboard.text
     assert "Advanced Console" not in dashboard.text
     assert "href='/console'" not in dashboard.text

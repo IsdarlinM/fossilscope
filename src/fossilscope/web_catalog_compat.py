@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 """Bounded compatibility bridge for the SRIC 0.5.14 Web catalog.
 
 FossilScope 0.5.14 can install a newer product archive with ``--no-deps`` before the
@@ -7,6 +5,8 @@ shared runtime is upgraded. SRIC 0.5.15 contains the canonical fix. This bridge 
 intercepts the 0.5.14 TypeError failure class so the Security Workspace can still load
 and the shared runtime can subsequently be repaired.
 """
+
+from __future__ import annotations
 
 import importlib.metadata
 from typing import Any

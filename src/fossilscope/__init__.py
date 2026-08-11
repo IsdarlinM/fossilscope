@@ -8,10 +8,10 @@ from .web_catalog_compat import install as _install_web_catalog_compat
 
 _install_web_catalog_compat()
 
-from .evolution import ArtifactKind, EvolutionDelta, StaleReferenceCandidate, VersionedArtifactObservation, diff_artifact_versions, find_stale_references
-from .lifecycle import EvidenceKind, ExposureLifecycle, LifecycleAssessment, SurfaceEvidence, assess_lifecycle
-from .planning import CurrentExposureState, ReobservationCandidate, plan_reobservation
-from .reobservation import ReobservationDecision, ReobservationMode, ReobservationReason, ReobservationRequest, ReobservationState, deduplicate_requests, evaluate_reobservation, schedule_retry
+from .evolution import ArtifactKind, EvolutionDelta, StaleReferenceCandidate, VersionedArtifactObservation, diff_artifact_versions, find_stale_references  # noqa: E402
+from .lifecycle import EvidenceKind, ExposureLifecycle, LifecycleAssessment, SurfaceEvidence, assess_lifecycle  # noqa: E402
+from .planning import CurrentExposureState, ReobservationCandidate, plan_reobservation  # noqa: E402
+from .reobservation import ReobservationDecision, ReobservationMode, ReobservationReason, ReobservationRequest, ReobservationState, deduplicate_requests, evaluate_reobservation, schedule_retry  # noqa: E402
 
 __all__ = [
     "ArtifactKind", "CurrentExposureState", "EvidenceKind", "EvolutionDelta", "ExposureLifecycle",

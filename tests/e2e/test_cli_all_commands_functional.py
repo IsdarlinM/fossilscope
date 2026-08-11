@@ -38,6 +38,7 @@ EXPECTED_PUBLIC_COMMANDS = {
     "extract",
     "fossils",
     "graph-at",
+    "help",
     "import",
     "init",
     "jobs",
@@ -93,6 +94,7 @@ def test_every_public_command_has_a_functional_offline_smoke(tmp_path: Path, mon
     _invoke(["version"])
     _invoke(["doctor", "--json"])
     _invoke(["capabilities"])
+    _invoke(["help"])
     _invoke(["init", workspace, *root_arg])
     _invoke(["workspace", "list", *root_arg])
     _invoke(["workspace", "show", workspace, *root_arg])

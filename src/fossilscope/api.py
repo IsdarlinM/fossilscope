@@ -12,6 +12,7 @@ from sric.jobs import JobEngine
 from sric.lineage import EvidenceLineage
 from sric.notebook import ResearchNotebook
 from sric.web_theme import SENTINEL_THEME_TOKENS_CSS
+from sric.workspace import Workspace
 
 from . import __version__
 from .advanced import FossilIntelligence
@@ -64,6 +65,7 @@ JS = r"""function e(v){return String(v??'').replace(/[&<>\"]/g,c=>({'&':'&amp;',
 
 
 def create_app(workspace: Path) -> FastAPI:
+    workspace = Workspace.initialize(workspace).root
     app = FastAPI(
         title="FossilScope Local API",
         version=__version__,

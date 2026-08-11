@@ -6,17 +6,8 @@ from pathlib import Path
 from typing import Optional
 import typer
 from sric.workspace import Workspace
-from sric.evidence import EvidenceStore
-from sric.models import Provenance, ProvenanceType
 from sric.plugins import PluginRegistry
-from sric.scope import ScopeEngine, ScopePolicy
-from sric.updater import perform_update
-from sric.graph import TemporalGraph
-from sric.jobs import JobEngine
-from sric.lineage import EvidenceLineage
-from sric.notebook import NotebookEntry, ResearchNotebook
 from . import __version__
-from .api import create_app
 from .core import FossilEngine
 from .models import Observation
 
@@ -296,6 +287,6 @@ def export_cmd(
 from . import cli_more as _cli_more  # noqa: F401,E402
 
 def run() -> None:
-    if len(sys.argv) >= 3 and sys.argv[-1] == "help" and sys.argv[1] != "help":
+    if len(sys.argv) >= 3 and sys.argv[-1] == "help":
         sys.argv[-1] = "--help"
     app()
